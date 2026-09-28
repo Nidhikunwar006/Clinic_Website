@@ -1,0 +1,287 @@
+{% extends 'clinic.html' %}
+{% block title %}Prescription{% endblock title %}
+{% block body %}
+<div class="header">
+    <h1>Prescription Preview</h1>
+    <div class="actions">
+        {% if request.user.profile.role == 'doctor' %}
+        <button class="btn" onclick="executePrint()">Print</button>
+        {% endif %}
+        <a class="btn secondary" href="{% url 'Anand_Clinic:prescription_generator_list' %}">Back</a>
+    </div>
+</div>
+
+<div id="printContainer" style="width:100%; max-width:100%;">
+    <!-- Spacer div that will take up space for top margin during print -->
+    <div id="prescriptionSpacer" style="height: 0px; width: 100%;"></div>
+    
+    <div id="currentPrescriptionArea" class="prescription-block">
+        <div style="text-align: right; margin-bottom: 20px; font-weight: bold; font-size: 14px;">
+            Date: {{ prescription.created_at|date:"d-m-Y" }}
+        </div>
+        <pre id="currentPrescriptionContent" style="white-space: pre-wrap; font-size:14px; line-height:1.5; margin:0; padding:10px 0;">{{ formatted }}</pre>
+    </div>
+</div>
+
+<!-- Print Options Modal -->
+<div id="printOptionsModal" class="print-modal" style="display:none;">
+    <div class="print-modal-backdrop"></div>
+    <div class="print-modal-panel">
+        <h3 style="margin:0 0 12px 0; font-size:18px; color:var(--text); font-weight:600;">Print Prescription</h3>
+        <p style="margin:0 0 20px 0; color:var(--muted); font-size:14px; line-height:1.5;">
+            There is enough space on the current page to print this prescription.<br>
+            Where would you like to print it?
+        </p>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn secondary" id="printSamePage">Same Page</button>
+            <button class="btn" id="printNewPage">New Page</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.prescription-block {
+    page-break-inside: avoid;
+}
+
+#prescriptionSpacer {
+    display: none !important;
+}
+
+@page {
+    size: A4;
+    margin: 20mm;
+    @top-center {
+        content: "";
+    }
+    @bottom-center {
+        content: "";
+    }
+}
+
+@media print {
+    .header, .actions { 
+        display: none !important; 
+    }
+    
+    body * { 
+        visibility: hidden !important; 
+    }
+    
+    #printContainer, #printContainer * { 
+        visibility: visible !important; 
+    }
+    
+    #printContainer { 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        margin: 0;
+        padding: 0;
+        box-shadow: none; 
+        border: none;
+    }
+    
+    /* Spacer occupies physical space for top margin positioning */
+    #prescriptionSpacer {
+        display: block !important;
+        height: var(--prescription-spacer-height, 0px) !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+    }
+    
+    #currentPrescriptionArea {
+        margin: 0 !important;
+        padding: 10px 0 !important;
+    }
+    
+    #currentPrescriptionArea.force-page-break {
+        page-break-before: always !important;
+    }
+    
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    html {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+#printContainer {
+    background: white;
+    color: black;
+}
+
+pre {
+    color: black !important;
+}
+
+/* Print Options Modal Styles */
+.print-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.print-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.print-modal-panel {
+    position: relative;
+    width: 420px;
+    max-width: 92%;
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(2, 6, 23, 0.2);
+    z-index: 2;
+    animation: modalEnter 300ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+</style>
+
+
+<script>
+// Page constants (millimetres)
+const A4_HEIGHT_MM = 297;
+const MARGIN_MM = 20;
+const AVAILABLE_HEIGHT_MM = A4_HEIGHT_MM - (MARGIN_MM * 2); // 257 mm
+let currentPrescriptionHeightMm = {{ current_prescription_height_mm|default:0 }};
+let topMarginMm = {{ top_margin_mm|default:0 }};
+let hasPreviousPrescriptions = {{ has_previous_prescriptions|lower }};
+let hasEnoughSpace = {{ has_enough_space|lower }};
+
+function showPrintOptionsModal() {
+    const modal = document.getElementById('printOptionsModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function hidePrintOptionsModal() {
+    const modal = document.getElementById('printOptionsModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function proceedWithPrint(printOnNewPage) {
+    const currentArea = document.getElementById('currentPrescriptionArea');
+    
+    if (printOnNewPage) {
+        currentArea.classList.add('force-page-break');
+        console.log('User chose to print on new page');
+    } else {
+        currentArea.classList.remove('force-page-break');
+        console.log('User chose to print on same page');
+    }
+    
+    hidePrintOptionsModal();
+    
+    // Small delay to ensure CSS is applied
+    setTimeout(() => {
+        window.print();
+    }, 100);
+}
+
+function executePrint() {
+    const spacer = document.getElementById('prescriptionSpacer');
+    const currentArea = document.getElementById('currentPrescriptionArea');
+    
+    // Set spacer height to create top margin effect (only takes space, no visual margin)
+    if (spacer) {
+        // `topMarginMm` is relative to the printable area; add page top margin when rendering
+        spacer.style.height = (topMarginMm + MARGIN_MM) + 'mm';
+        document.documentElement.style.setProperty('--prescription-spacer-height', (topMarginMm + MARGIN_MM) + 'mm');
+    }
+    
+    console.log('Top margin position:', topMarginMm, 'mm');
+    console.log('Prescription height:', currentPrescriptionHeightMm, 'mm');
+    console.log('Has previous prescriptions:', hasPreviousPrescriptions);
+    console.log('Has enough space:', hasEnoughSpace);
+    
+    // If there are previous prescriptions and enough space on current page, show modal
+    if (hasPreviousPrescriptions && hasEnoughSpace) {
+        showPrintOptionsModal();
+    } else if (hasPreviousPrescriptions && !hasEnoughSpace) {
+        // Not enough space, auto force new page
+        currentArea.classList.add('force-page-break');
+        console.log('Not enough space. Automatically printing on new page.');
+        setTimeout(() => {
+            window.print();
+        }, 100);
+    } else {
+        // No previous prescriptions, just print normally
+        currentArea.classList.remove('force-page-break');
+        console.log('No previous prescriptions. Printing normally.');
+        setTimeout(() => {
+            window.print();
+        }, 100);
+    }
+}
+
+// Setup on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Prescription view loaded');
+    console.log('Top margin:', topMarginMm, 'mm');
+    console.log('Current prescription height:', currentPrescriptionHeightMm, 'mm');
+    
+    // Set initial spacer height (will be updated on print)
+    const spacer = document.getElementById('prescriptionSpacer');
+    if (spacer) {
+        spacer.style.height = '0px';
+    }
+    
+    // Attach event handlers for print options modal
+    const printSamePageBtn = document.getElementById('printSamePage');
+    const printNewPageBtn = document.getElementById('printNewPage');
+    const modalBackdrop = document.querySelector('.print-modal-backdrop');
+    
+    if (printSamePageBtn) {
+        printSamePageBtn.addEventListener('click', () => proceedWithPrint(false));
+    }
+    
+    if (printNewPageBtn) {
+        printNewPageBtn.addEventListener('click', () => proceedWithPrint(true));
+    }
+    
+    // Close modal when clicking backdrop
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', hidePrintOptionsModal);
+    }
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('printOptionsModal');
+            if (modal && modal.style.display === 'flex') {
+                hidePrintOptionsModal();
+            }
+        }
+    });
+});
+</script>
+{% endblock body %}

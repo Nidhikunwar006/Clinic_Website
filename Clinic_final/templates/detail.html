@@ -1,0 +1,809 @@
+{% extends 'clinic.html' %}
+{% load static %}
+{% block title %}Patient Detail | OM GAYATRI HOMEOPATHIC CLINIC{% endblock title %}
+{% block head %}
+<style>
+    .chart { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    .card.chart { width: 100%; }
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 10px 0; /* give some vertical breathing room so logo isn't touching top */
+    }
+    .visits-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 14px;
+        border-radius: 999px;
+        background: linear-gradient(90deg,#7c3aed,#06b6d4);
+        color: #fff;
+        font-weight:700;
+        box-shadow: 0 8px 18px rgba(124,58,237,0.18);
+        margin-top: 4px;
+        margin-bottom: 4px;
+        font-size: 13px;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+    .month-heading { margin: 12px 0 6px; font-weight:700; color:var(--text); }
+    /* Force the detail content to span full width and sit below header */
+    .content { flex-direction: column !important; }
+    .main-content { width: 100% !important; padding-right: 0 !important; }
+    .main-content .main-content-grid { grid-template-columns: 1fr !important; }
+    .card.chart { margin-left: auto; margin-right: auto; max-width: 980px; }
+    .facility { font-size: 12px; color: var(--muted); letter-spacing: .3px; text-transform: uppercase; }
+    .chart-header .logo {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #ffffff;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    .chart-header-primary {
+        display: flex;
+        align-items: center; /* vertically center logo and text */
+        gap: 12px;
+        min-width: 0;
+    }
+    .chart-header-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+    .chart-header-text-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .chart-header-text .patient-name {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        color: var(--text);
+    }
+    .badge-id { display: inline-block; padding: 6px 10px; border-radius: 999px; background: rgba(96,165,250,0.15); color: #1e293b; border: 1px solid #bfdbfe; font-size: 12px; }
+    .section { border: 1px solid var(--border); border-radius: 14px; background: var(--card); }
+    .section-title { padding: 12px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(20,184,166,0.08)); font-weight: 700; font-size: 14px; }
+    .section-body { padding: 14px 16px; }
+    .info-grid { display: grid; grid-template-columns: 180px 1fr; row-gap: 10px; column-gap: 18px; }
+    .label { color: var(--muted); font-size: 13px; }
+    .value { color: var(--text); font-size: 16px; font-weight: 600; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+    .actions > .btn, .actions > div > .btn { height: 100%; display: inline-flex; align-items: center; }
+
+    .header-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+    }
+    .header-main-left {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+    @media (max-width: 720px) {
+        .info-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+        /* Make inline detail view friendlier on phones when opened from dashboard */
+        .header-main {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .chart-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .chart-header .facility {
+            margin-bottom: 4px;
+        }
+        .card.chart {
+            padding: 12px;
+            border-radius: 12px;
+        }
+        .actions {
+            width: 100%;
+            justify-content: flex-start;
+        }
+        .actions .btn {
+            flex: 1 1 auto;
+            text-align: center;
+        }
+    }
+
+    /* Timeline styles */
+    .timeline { margin-top: 20px; }
+    .timeline-item { 
+        border-left: 3px solid var(--border); 
+        padding-left: 20px; 
+        margin-bottom: 24px; 
+        position: relative;
+        padding-bottom: 16px;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 4px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 2px solid #fff;
+    }
+    .timeline-item.appointment::before { background: #8b5cf6; }
+    .timeline-item.followup::before { background: #14b8a6; }
+    .timeline-item.checkin::before { background: #60a5fa; }
+    .timeline-item.prescription::before { background: #f59e0b; }
+    .timeline-date { 
+        font-size: 12px; 
+        color: var(--muted); 
+        margin-bottom: 4px; 
+        font-weight: 600;
+    }
+    .timeline-title { 
+        font-size: 15px; 
+        font-weight: 700; 
+        color: var(--text); 
+        margin-bottom: 8px;
+    }
+    .timeline-content {
+        background: var(--bg-soft);
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 8px;
+        font-size: 13px;
+    }
+    .timeline-content .info-row {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .timeline-content .info-label {
+        color: var(--muted);
+        font-weight: 500;
+    }
+    /* Back to Home uses default .btn gradient */
+    .prescription-instructions {
+        margin-top: 8px;
+        padding-left: 16px;
+    }
+    .prescription-instructions li {
+        margin-bottom: 4px;
+    }
+    #personalNoteDropdown a:hover {
+        background: rgba(139,92,246,0.1);
+    }
+
+    /* Print-only rules: show complete patient record including timeline */
+    @media print {
+        @page { 
+            margin: 16mm; 
+            size: A4; 
+        }
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        /* Override base template print rules */
+        body * { 
+            visibility: visible !important; 
+        }
+        body { 
+            background: #ffffff !important; 
+            color: #000000 !important;
+        }
+        .sidebar, .header, .actions, .btn, .nav, a.btn { 
+            display: none !important; 
+        }
+        .print-area { 
+            box-shadow: none !important; 
+            border: none !important; 
+            background: #ffffff !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            visibility: visible !important;
+            display: block !important;
+            position: relative !important;
+        }
+        .print-area * {
+            visibility: visible !important;
+        }
+        .chart {
+            display: block !important;
+            gap: 20px;
+        }
+        .section { 
+            border: 1px solid #e5e7eb !important; 
+            page-break-inside: avoid; 
+            margin-bottom: 20px !important;
+            background: #ffffff !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        .section-title {
+            background: #f3f4f6 !important;
+            border-bottom: 2px solid #e5e7eb !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        .section-body {
+            visibility: visible !important;
+            display: block !important;
+        }
+        .timeline { 
+            margin-top: 10px !important; 
+            display: block !important;
+            visibility: visible !important;
+        }
+        .timeline-item { 
+            page-break-inside: avoid; 
+            margin-bottom: 20px !important;
+            border-left: 2px solid #d1d5db !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        .timeline-content {
+            background: #f8fafc !important;
+            border: 1px solid #e5e7eb !important;
+            padding: 12px !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        .timeline-date, .timeline-title {
+            visibility: visible !important;
+            display: block !important;
+        }
+        .timeline-item::before {
+            border: 2px solid #ffffff !important;
+            box-shadow: 0 0 0 1px #d1d5db !important;
+        }
+        /* Hide follow-ups and check-ins in printed output - only visits and prescriptions should print */
+        .timeline-item.followup, .timeline-item.checkin { display: none !important; visibility: hidden !important; }
+        .timeline-date {
+            color: #6b7280 !important;
+        }
+        .timeline-title {
+            color: #111827 !important;
+        }
+        .prescription-instructions {
+            margin-left: 0 !important;
+            padding-left: 20px !important;
+            display: block !important;
+        }
+        .prescription-instructions li {
+            color: #111827 !important;
+            margin-bottom: 6px !important;
+        }
+        /* Ensure prescription instructions box is visible in print */
+        .prescription-instructions-box {
+            background: #f8fafc !important;
+            border-left: 3px solid #f59e0b !important;
+            padding: 12px !important;
+            margin-top: 12px !important;
+            border-radius: 8px !important;
+            page-break-inside: avoid !important;
+            display: block !important;
+        }
+        .prescription-instructions-title {
+            font-weight: 700 !important;
+            color: #111827 !important;
+            margin-bottom: 8px !important;
+        }
+        .prescription-instructions-box div[style*="margin-bottom: 10px"] {
+            margin-bottom: 10px !important;
+        }
+        .prescription-instructions-box div[style*="margin-top: 10px"] {
+            margin-top: 10px !important;
+        }
+        .prescription-instructions-box strong {
+            color: #111827 !important;
+            font-weight: 700 !important;
+        }
+        .prescription-instructions-box ul {
+            margin-top: 6px !important;
+            display: block !important;
+            padding-left: 20px !important;
+        }
+        .prescription-instructions-box li {
+            margin-bottom: 4px !important;
+            color: #111827 !important;
+            display: list-item !important;
+        }
+        .info-grid {
+            grid-template-columns: 150px 1fr !important;
+            visibility: visible !important;
+            display: grid !important;
+        }
+        .info-label, .label {
+            color: #6b7280 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        .value {
+            color: #111827 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        .info-row {
+            visibility: visible !important;
+            display: grid !important;
+        }
+        .badge-id {
+            background: #dbeafe !important;
+            color: #1e293b !important;
+            border: 1px solid #93c5fd !important;
+            visibility: visible !important;
+            display: inline-block !important;
+        }
+        .chart-header {
+            margin-bottom: 20px !important;
+            visibility: visible !important;
+            display: grid !important;
+        }
+        .facility {
+            color: #6b7280 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+        /* Ensure all text and content is visible */
+        .print-area p, .print-area span, .print-area div, .print-area ul, .print-area li, .print-area strong {
+            visibility: visible !important;
+        }
+    }
+</style>
+{% endblock head %}
+{% if request.user.profile.role == 'doctor' %}
+<style>
+/* Doctor-only print rules: ensure clean printable output */
+@media print {
+    .sidebar, .header, .actions, .btn, .nav, a.btn { display: none !important; }
+    body * { visibility: hidden !important; }
+    .print-area, .print-area * { visibility: visible !important; }
+    .print-area { position: absolute !important; left: 0; top: 0; width: 100% !important; box-shadow: none !important; border: none !important; background: #fff !important; }
+}
+</style>
+{% endif %}
+{% block body %}
+    <div class="header">
+        <div class="header-main">
+            <div class="header-main-left">
+                <h1>Patient Record</h1>
+                <div>
+                    {% if total_visits %}
+                        <span class="visits-badge">From {{ first_visit_date|date:"M d, Y" }} to {{ last_visit_date|date:"M d, Y" }} · Total visits: {{ total_visits }}</span>
+                    {% else %}
+                        <span class="visits-badge">Registered: {{ object.appointment_date|date:"M d, Y" }} · Total visits: 0</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="actions">
+                {% if request.user.profile.role == 'doctor' %}
+                <div style="position: relative; display: inline-block;">
+                    <button class="btn" id="personalNoteBtn">Personal Note ▼</button>
+                    <div id="personalNoteDropdown" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; min-width: 200px; overflow: hidden;">
+                        <a href="{% url 'Anand_Clinic:personal_notes_list' object.pk %}" style="display: block; padding: 12px 16px; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); transition: background 0.2s ease;">View Personal Notes</a>
+                        <a href="#" id="addNoteBtn" style="display: block; padding: 12px 16px; color: var(--text); text-decoration: none; transition: background 0.2s ease;">Add Note</a>
+                    </div>
+                </div>
+                {% endif %}
+                <a class="btn secondary" href="{% url 'Anand_Clinic:doctor_dashboard' %}" id="backHomeBtn">Back to Home</a>
+            </div>
+        </div>
+    </div>
+<div id="patientDetailSection">
+<div class="card chart print-area">
+    <div class="chart-header">
+        <div class="chart-header-primary">
+            <img src="{% static 'logowithname.jpg' %}" alt="Clinic Banner" class="logo" style="max-height:80px; object-fit:contain; border-radius:8px;">
+            <div class="chart-header-text">
+                <div class="chart-header-text-top">
+                    <div class="patient-name">{{ object.name }}</div>
+                    <span class="badge-id">Case {{ object.case }}</span>
+                </div>
+            </div>
+        </div>
+        <!-- badge moved next to patient name -->
+    </div>
+
+    <div class="section">
+        <div class="section-title">Patient Demographics</div>
+        <div class="section-body">
+            <div class="info-grid">
+                <div class="label">Case</div>
+                <div class="value">{{ object.case }}</div>
+
+                <div class="label">Full Name</div>
+                <div class="value">{{ object.name }}</div>
+
+                <div class="label">Gender</div>
+                <div class="value">{{ object.gender }}</div>
+
+                <div class="label">Phone Number</div>
+                <div class="value">{{ object.phone_no }}</div>
+
+                <div class="label">Address</div>
+                <div class="value">{{ object.address }}</div>
+
+                {% if request.user.profile.role == 'doctor' %}
+                <div class="label">Age</div>
+                <div class="value">{{ object.age }}</div>
+
+                <div class="label">Assigned Doctor</div>
+                <div class="value">{{ object.get_doctor_display }}</div>
+
+                <div class="label">First Appointment Date</div>
+                <div class="value">{{ object.appointment_date|date:"M d, Y H:i" }}</div>
+                {% endif %}
+            </div>
+            {% if request.user.profile.role == 'doctor' %}
+            <form method="post" action="{% url 'Anand_Clinic:patient_details' object.pk %}" style="margin-top:12px;" class="no-print">
+                {% csrf_token %}
+                <div class="info-grid" style="row-gap:12px;">
+                    <div class="label">Edit Case</div>
+                    <div>
+                        <input type="text" name="case" value="{{ object.case }}" style="height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;width:100%;background:var(--surface);color:var(--text);" />
+                    </div>
+                    <div class="label">Edit Phone Number</div>
+                    <div>
+                        <input type="text" name="phone_no" value="{{ object.phone_no }}" style="height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;width:100%;background:var(--surface);color:var(--text);" />
+                    </div>
+                </div>
+                <div class="actions" style="margin-top:10px;">
+                    <button class="btn" type="submit">Save Changes</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Removed standalone Visits section to avoid duplicate; summary is now shown inside the Patient Visits & Prescriptions section below -->
+
+    <div class="section">
+        <div class="section-title">Patient Visits & Prescriptions ({{ timeline|length }} Total)</div>
+        <div class="section-body">
+            {% if total_visits %}
+                <div style="margin-bottom:8px; font-weight:600; color:var(--text);">
+                    From {{ first_visit_date|date:"M d, Y" }} to {{ last_visit_date|date:"M d, Y" }} · Total visits: {{ total_visits }}
+                </div>
+            {% else %}
+                <div style="margin-bottom:8px; font-weight:600; color:var(--text);">Registered: {{ object.appointment_date|date:"M d, Y" }} · Total visits: 0</div>
+            {% endif %}
+            {% if request.user.profile.role == 'doctor' %}
+                {% if timeline %}
+                <div class="timeline">
+                    {% for item in timeline %}
+                    <div class="timeline-item {{ item.type }}">
+                        <div class="timeline-date">{{ item.date|date:"M d, Y H:i" }}</div>
+                        <div class="timeline-title">{{ item.title }}</div>
+                        <div class="timeline-content">
+                            {% if item.type == 'appointment' %}
+                                <div class="info-row">
+                                    <span class="info-label">Appointment Date & Time:</span>
+                                    <span>{{ item.data.appointment_date|date:"M d, Y H:i" }}</span>
+                                </div>
+                            {% elif item.type == 'visit' %}
+                                <div class="info-row">
+                                    <span class="info-label">Visit Date & Time:</span>
+                                    <span>{{ item.data.visit_datetime|date:"M d, Y H:i" }}</span>
+                                </div>
+                                {% if item.data.notes %}
+                                <div class="info-row">
+                                    <span class="info-label">Notes:</span>
+                                    <span>{{ item.data.notes }}</span>
+                                </div>
+                                {% endif %}
+                            {% elif item.type == 'checkin' %}
+                                <div class="info-row">
+                                    <span class="info-label">Visit Date & Time:</span>
+                                    <span>{{ item.data.checkin_time|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Status:</span>
+                                    <span>{{ item.data.get_status_display }}</span>
+                                </div>
+                            {% elif item.type == 'prescription' %}
+                                <div class="info-row">
+                                    <span class="info-label">Case Number:</span>
+                                    <span>{{ item.data.case_number }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Language:</span>
+                                    <span>{{ item.data.get_language_display }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Prescribed By:</span>
+                                    <span>
+                                        {% if item.data.prescribed_by_ami %}Dr. Ami Bhatt{% endif %}
+                                        {% if item.data.prescribed_by_ami and item.data.prescribed_by_kaushal %} & {% endif %}
+                                        {% if item.data.prescribed_by_kaushal %}Dr. Kaushal Bhatt{% endif %}
+                                    </span>
+                                </div>
+                                <div class="prescription-instructions-box" style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                                    <div class="prescription-instructions-title" style="font-weight: 700; margin-bottom: 8px; color: var(--text);">Prescription Instructions:</div>
+                                    {% if item.data.language == 'gu' %}
+                                        {% if item.data.first_day_instructions.all %}
+                                        <div style="margin-bottom: 10px;">
+                                            <strong style="color: var(--text);">પહેલા દિવસે:</strong>
+                                            <ul class="prescription-instructions" style="margin-top: 6px;">
+                                                {% for inst in item.data.first_day_instructions.all %}
+                                                <li style="margin-bottom: 4px;">
+                                                    {% if inst.size_of_bottle == 'small' %}નાની{% elif inst.size_of_bottle == 'medium' %}મધ્યમ{% elif inst.size_of_bottle == 'large' %}મોટી{% else %}{{ inst.size_of_bottle|capfirst }}{% endif %} 
+                                                    બોટલ: '{{ inst.label }}' તરીકે લેબલ થયેલ: 
+                                                    {% if inst.time_of_day == 'Day' %}દિવસ{% elif inst.time_of_day == 'Morning' %}સવારે{% elif inst.time_of_day == 'Night' %}રાત્રે{% else %}{{ inst.time_of_day }}{% endif %} 
+                                                    સમયે {{ inst.no_of_pill }} ગોળીઓ લો.
+                                                    {% if inst.special_instruction %} {{ inst.special_instruction }}{% endif %}
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.data.next_day_instructions.all %}
+                                        <div style="margin-top: 10px;">
+                                            <strong style="color: var(--text);">આગલા દિવસોથી આગળ:</strong>
+                                            <ul class="prescription-instructions" style="margin-top: 6px;">
+                                                {% for inst in item.data.next_day_instructions.all %}
+                                                <li style="margin-bottom: 4px;">
+                                                    બોટલ નંબર. {{ inst.bottle_no }} માંથી: {{ inst.no_of_pill }} ગોળી, 
+                                                    દિવસમાં {% if inst.dose == 'one' %}એક{% elif inst.dose == 'two' %}બે{% elif inst.dose == 'three' %}ત્રણ{% elif inst.dose == 'four' %}ચાર{% elif inst.dose == 'five' %}પાંચ{% else %}{{ inst.dose }}{% endif %} વાર. 
+                                                    રોજ {% if inst.time_of_day == 'Day' %}દિવસ{% elif inst.time_of_day == 'Morning' %}સવારે{% elif inst.time_of_day == 'Night' %}રાત્રે{% else %}{{ inst.time_of_day }}{% endif %}.
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if item.data.first_day_instructions.all %}
+                                        <div style="margin-bottom: 10px;">
+                                            <strong style="color: var(--text);">On first day:</strong>
+                                            <ul class="prescription-instructions" style="margin-top: 6px;">
+                                                {% for inst in item.data.first_day_instructions.all %}
+                                                <li style="margin-bottom: 4px;">
+                                                    ☑ {{ inst.size_of_bottle|capfirst }} bottle: Labeled as '{{ inst.label }}': take {{ inst.no_of_pill }} pills at {{ inst.time_of_day }}.
+                                                    {% if inst.special_instruction %} {{ inst.special_instruction }}{% endif %}
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.data.next_day_instructions.all %}
+                                        <div style="margin-top: 10px;">
+                                            <strong style="color: var(--text);">From Next day onwards:</strong>
+                                            <ul class="prescription-instructions" style="margin-top: 6px;">
+                                                {% for inst in item.data.next_day_instructions.all %}
+                                                <li style="margin-bottom: 4px;">
+                                                    ☑ From Bottle No. {{ inst.bottle_no }}: {{ inst.no_of_pill }} pills, {{ inst.dose }} times a {{ inst.time_of_day }}.
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: var(--muted); text-align: center; padding: 20px;">No visit history available.</p>
+                {% endif %}
+            {% elif request.user.profile.role == 'receptionist' %}
+                {% if timeline %}
+                <div class="timeline">
+                    {% for item in timeline %}
+                    <div class="timeline-item {{ item.type }}">
+                        <div class="timeline-date">{{ item.date|date:"M d, Y H:i" }}</div>
+                        <div class="timeline-title">{{ item.title }}</div>
+                        <div class="timeline-content">
+                            {% if item.type == 'appointment' %}
+                                <div class="info-row">
+                                    <span class="info-label">Appointment Date & Time:</span>
+                                    <span>{{ item.data.appointment_date|date:"M d, Y H:i" }}</span>
+                                </div>
+                            {% elif item.type == 'visit' %}
+                                <div class="info-row">
+                                    <span class="info-label">Visit Date & Time:</span>
+                                    <span>{{ item.data.visit_datetime|date:"M d, Y H:i" }}</span>
+                                </div>
+                                {% if item.data.notes %}
+                                <div class="info-row">
+                                    <span class="info-label">Notes:</span>
+                                    <span>{{ item.data.notes }}</span>
+                                </div>
+                                {% endif %}
+                            {% elif item.type == 'prescription' %}
+                                <div class="info-row">
+                                    <span class="info-label">Case Number:</span>
+                                    <span>{{ item.data.case_number }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Language:</span>
+                                    <span>{{ item.data.get_language_display }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Prescribed By:</span>
+                                    <span>
+                                        {% if item.data.prescribed_by_ami %}Dr. Ami Bhatt{% endif %}
+                                        {% if item.data.prescribed_by_ami and item.data.prescribed_by_kaushal %} & {% endif %}
+                                        {% if item.data.prescribed_by_kaushal %}Dr. Kaushal Bhatt{% endif %}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: var(--muted); text-align: center; padding: 20px;">No visit history available.</p>
+                {% endif %}
+            {% else %}
+                <p style="color: var(--muted); text-align: center; padding: 20px;">No visit history available.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% if request.user.profile.role == 'doctor' %}
+    <div id="personalNoteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:#fff; width:90%; max-width:600px; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.18); display:flex; flex-direction:column; max-height:85vh;">
+        <div style="padding:12px 16px; border-bottom:1px solid #e5e7eb; font-weight:700;">Personal Note (Private)</div>
+        <div style="padding:16px; overflow:auto; flex:1;">
+          <div style="display:grid; row-gap:12px;">
+            <label style="font-size:13px; color:#6b7280;">Note</label>
+            <textarea id="personalNoteText" rows="6" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; resize:none; min-height:140px;"></textarea>
+            <label style="font-size:13px; color:#6b7280;">Image (optional)</label>
+            <input type="file" id="personalNoteImage" accept="image/*" multiple />
+            <div id="personalNotePreviewList" style="display:none; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px;"></div>
+            <div id="personalNoteStatus" style="font-size:13px; color:#059669; display:none;"></div>
+          </div>
+        </div>
+        <div style="padding:12px 16px; border-top:1px solid #e5e7eb; display:flex; gap:8px; justify-content:flex-end;">
+          <button class="btn secondary" id="personalNoteCancel">Cancel</button>
+          <button class="btn" id="personalNoteSave">Save</button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var noteBtn = document.getElementById('personalNoteBtn');
+  var dropdown = document.getElementById('personalNoteDropdown');
+  var addNoteBtn = document.getElementById('addNoteBtn');
+  var modal = document.getElementById('personalNoteModal');
+  var txt = document.getElementById('personalNoteText');
+  var imgInput = document.getElementById('personalNoteImage');
+  var previewList = document.getElementById('personalNotePreviewList');
+  var statusEl = document.getElementById('personalNoteStatus');
+  var cancelBtn = document.getElementById('personalNoteCancel');
+  var saveBtn = document.getElementById('personalNoteSave');
+  var pk = {{ object.pk }};
+  
+  if (!noteBtn || !dropdown || !modal || !pk) return;
+  
+  function getCookie(name) {
+    var value = '; ' + document.cookie;
+    var parts = value.split('; ' + name + '=');
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  
+  function openModal() { 
+    modal.style.display = 'flex';
+    // Clear form when opening for new note
+    if (txt) txt.value = '';
+    if (previewList) {
+      previewList.innerHTML = '';
+      previewList.style.display = 'none';
+    }
+    if (imgInput) imgInput.value = '';
+    if (statusEl) {
+      statusEl.style.display = 'none';
+      statusEl.textContent = '';
+    }
+  }
+  
+  function closeModal() { 
+    modal.style.display = 'none'; 
+    if (statusEl) { 
+      statusEl.style.display='none'; 
+      statusEl.textContent=''; 
+    } 
+  }
+  
+  function saveNote() {
+    var url = '/detail/' + pk + '/personal-note/save/';
+    var fd = new FormData();
+    if (txt) fd.append('note', txt.value || '');
+    if (imgInput && imgInput.files && imgInput.files.length) {
+      for (var i=0; i<imgInput.files.length; i++) {
+        fd.append('image', imgInput.files[i]);
+      }
+    }
+    fetch(url, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' }, body: fd })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.success) throw new Error(data.error || 'Save failed');
+        closeModal();
+        if (imgInput) { try { imgInput.value = ''; } catch(_) {} }
+        if (statusEl) {
+          statusEl.style.color = '#059669';
+          statusEl.textContent = 'Note saved successfully!';
+          statusEl.style.display = 'block';
+        }
+        // Optionally reload or show success message
+        setTimeout(function() {
+          if (statusEl) statusEl.style.display = 'none';
+        }, 2000);
+      })
+      .catch(function(err){
+        if (statusEl) {
+          statusEl.style.color = '#b91c1c';
+          statusEl.textContent = err.message || 'Failed to save personal note';
+          statusEl.style.display = 'block';
+        }
+      });
+  }
+  
+  // Toggle dropdown
+  noteBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    if (dropdown && !noteBtn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+  
+  // Handle "Add Note" button
+  if (addNoteBtn) {
+    addNoteBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      dropdown.style.display = 'none';
+      openModal();
+    });
+  }
+  
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if (saveBtn) saveBtn.addEventListener('click', saveNote);
+  
+  if (imgInput) {
+    imgInput.addEventListener('change', function(){
+      if (imgInput.files && imgInput.files.length && previewList) {
+        previewList.style.display = 'grid';
+        previewList.innerHTML = '';
+        Array.prototype.forEach.call(imgInput.files, function(file){
+          var reader = new FileReader();
+          reader.onload = function(e){
+            var img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.maxWidth = '100%';
+            img.style.borderRadius = '8px';
+            img.style.border = '1px solid #e5e7eb';
+            img.style.cursor = 'zoom-in';
+            img.addEventListener('click', function(){ window.open(e.target.result, '_blank'); });
+            previewList.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    });
+  }
+});
+</script>
+{% endblock body %}
+
+{% comment %} Scripts are provided by the base template; use the global print helper there. {% endcomment %}

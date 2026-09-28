@@ -1,0 +1,9 @@
+{
+  "venv": "venv",
+  "pythonVersion": "3.11",
+  "pythonPath": "./venv/Scripts/python.exe",
+  "typeCheckingMode": "basic",
+  "include": ["Anand_Clinic", "Clinic", "templates"],
+  "exclude": ["**/node_modules", "**/__pycache__", "venv"],
+  "stubPath": "./typings"
+}

@@ -1,0 +1,110 @@
+{% extends 'clinic.html' %}
+{% block title %}Patients | OM GAYATRI HOMEOPATHIC CLINIC{% endblock title %}
+{% block head %}
+<style>
+    .filters { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .filters input[type="text"] {
+        flex:1;
+        min-width: 180px;
+        height:44px;
+        border:1px solid var(--border);
+        border-radius:10px;
+        padding:0 12px;
+        background:var(--surface);
+        color:var(--text);
+    }
+    .filters .btn {
+        height:44px;
+        padding:0 16px;
+        border-radius:10px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        line-height:normal;
+        white-space: nowrap;
+    }
+    .filters a.btn { background: #94a3b8 !important; box-shadow: none !important; color: #fff !important; }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 8px;
+    }
+    
+    .table {
+        width:100%;
+        border-collapse:collapse;
+        table-layout:auto;
+        min-width: 480px;
+    }
+    .table thead th { background:var(--surface); color:var(--muted); font-weight:600; letter-spacing:.3px;
+        text-align: start;
+    }
+    .table th, .table td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .table td.actions { text-align:center; }
+    .table tbody tr:hover { background: rgba(99,102,241,0.06); }
+
+    @media (max-width: 640px) {
+        .filters {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filters input[type="text"] {
+            width: 100%;
+        }
+        .filters .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock head %}
+{% block body %}
+<div class="header">
+    <h1>Patients</h1>
+    <div style="display: flex; gap: 10px;">
+        <a class="btn" href="{% url 'Anand_Clinic:medicine_list' %}">Pharmacy</a>
+        <a class="btn" href="{% url 'Anand_Clinic:add_patient' %}" style="background: linear-gradient(135deg, #ff6b6b, #ff8e53);">Add New Patient</a>
+    </div>
+</div>
+<div class="card" style="margin-top:12px;">
+    <form method="get" class="filters">
+        <input type="text" name="search" placeholder="Search by case or name..." value="{{ request.GET.search }}">
+        <button class="btn" type="submit">Search</button>
+        <a class="btn" href="{% url 'Anand_Clinic:patient_list' %}">Cancel</a>
+    </form>
+</div>
+<div class="card">
+    <div class="table-wrapper">
+    <table class="table" id="patient-list">
+        <colgroup>
+            <col style="width:35%">
+            <col style="width:20%">
+            <col style="width:25%">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Case</th>
+                <th style="text-align: center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for patient in patients %}
+            <tr>
+                <td class="name">{{ patient.name }}</td>
+                <td class="case">{{ patient.case }}</td>
+                <td class="actions">
+                    <a class="btn" href="{% url 'Anand_Clinic:patient_details' patient.case_no %}">View Details</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3">No patients found.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock body %}
+
+{% block scripts %}{% endblock scripts %}

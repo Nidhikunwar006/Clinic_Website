@@ -1,0 +1,443 @@
+{% extends 'clinic.html' %}
+{% block title %}Prescription Generator{% endblock title %}
+{% block body %}
+<div class="header">
+    <h1>Prescription Generator</h1>
+    <div class="actions">
+        <a class="btn" href="{% url 'Anand_Clinic:prescription_generator_list' %}">All Prescriptions</a>
+        <a class="btn secondary" href="{% url 'Anand_Clinic:index' %}">Back to Home</a>
+    </div>
+</div>
+
+<div class="main-content-grid">
+    <div class="card">
+        <h2>Create Prescription</h2>
+        <form method="post" id="prescriptionGenForm">
+            {% csrf_token %}
+            {% if prescription %}<input type="hidden" id="isEditFlag" value="1">{% endif %}
+            <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="form-group">
+                    <label>Patient</label>
+                    <select id="patientSelect" name="patient" required>
+                        <option value="">Select Patient</option>
+                        {% for p in patients %}
+                        <option value="{{ p.pk }}" data-case="{{ p.case }}" {% if prescription and p.pk == prescription.patient.pk %}selected{% endif %}>{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Case</label>
+                    <input type="text" id="caseNumber" name="case_number" readonly required value="{% if prescription.case %}{{ prescription.case }}{% else %}{{ prescription.case_number }}{% endif %}">
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:12px;">
+                <h3>Prescribing Doctor(s)</h3>
+                <div class="doctor-compact">
+                    <label class="doc-pill">
+                        <input type="checkbox" id="docAmi" name="doctor_ami" {% if prescription and prescription.prescribed_by_ami %}checked{% endif %}>
+                        <span>Ami</span>
+                    </label>
+                    <label class="doc-pill">
+                        <input type="checkbox" id="docKaushal" name="doctor_kaushal" {% if prescription and prescription.prescribed_by_kaushal %}checked{% endif %}>
+                        <span>Kaushal</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Instruction Type</label>
+                <select id="instructionType" name="instruction_type" required>
+                    <option value="first">First Day Instructions</option>
+                    <option value="next">From Next Day Onwards</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Language</label>
+                <select id="languageSelect" name="language" required>
+                    <option value="en" {% if prescription and prescription.language == 'en' %}selected{% endif %}>English</option>
+                    <option value="gu" {% if prescription and prescription.language == 'gu' %}selected{% endif %}>Gujarati</option>
+                </select>
+            </div>
+
+
+    
+    <div id="firstDaySection" class="card" style="margin-top:12px;{% if prescription %} display:block;{% endif %}">
+        <h3>First Day Instructions</h3>
+        <div id="firstList">
+            {% if prescription %}
+                {% for fd in prescription.first_day_instructions.all %}
+                <div class="instruction-block" style="border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;">
+                    <div class="inline-row">
+                        <select name="first-{{ forloop.counter0 }}-size" required>
+                          <option value="">Size</option>
+                          <option value="Small" {% if fd.size_of_bottle == 'Small' %}selected{% endif %}>Small</option>
+                          <option value="Medium" {% if fd.size_of_bottle == 'Medium' %}selected{% endif %}>Medium</option>
+                          <option value="Large" {% if fd.size_of_bottle == 'Large' %}selected{% endif %}>Large</option>
+                        </select>
+                        <input type="text" name="first-{{ forloop.counter0 }}-label" placeholder="Label" required value="{{ fd.label }}">
+                        <input type="text" name="first-{{ forloop.counter0 }}-pills" placeholder="Quantity" required value="{{ fd.no_of_pill }}">
+                        <select name="first-{{ forloop.counter0 }}-unit" required>
+                          <option value="pill" {% if 'pill' in fd.no_of_pill or 'ગોળી' in fd.no_of_pill or 'ગોળીઓ' in fd.no_of_pill %}selected{% endif %}>Pill</option>
+                          <option value="drop" {% if 'drop' in fd.no_of_pill or 'ટીપાં' in fd.no_of_pill %}selected{% endif %}>Drop</option>
+                        </select>
+                        <input type="text" name="first-{{ forloop.counter0 }}-special" placeholder="Special instruction" value="{{ fd.special_instruction }}">
+                    </div>
+                    <div class="inline-row" style="display:flex; gap:15px; align-items:center;">
+                            <label><input type="checkbox" name="first-{{ forloop.counter0 }}-time_morning" value="Morning" {% if 'Morning' in fd.time_of_day %}checked{% endif %}> Morning</label>
+                            <label><input type="checkbox" name="first-{{ forloop.counter0 }}-time_afternoon" value="Afternoon" {% if 'Afternoon' in fd.time_of_day %}checked{% endif %}> Afternoon</label>
+                            <label><input type="checkbox" name="first-{{ forloop.counter0 }}-time_evening" value="Evening" {% if 'Evening' in fd.time_of_day %}checked{% endif %}> Evening</label>
+                            <label><input type="checkbox" name="first-{{ forloop.counter0 }}-time_night" value="Night" {% if 'Night' in fd.time_of_day %}checked{% endif %}> Night</label>
+                    </div>
+                    <div class="inline-row" style="display:flex; justify-content:flex-start;">
+                        <button type="button" class="remove-btn">Remove</button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <button type="button" class="btn" id="addFirst">Add another medicine</button>
+        <input type="hidden" id="firstTotal" name="first_TOTAL" value="{% if prescription %}{{ prescription.first_day_instructions.count }}{% else %}0{% endif %}">
+    </div>
+
+            <div id="nextDaySection" class="card" style="margin-top:12px; {% if prescription %}display:block;{% else %}display:none;{% endif %}">
+                <h3>From Next Day Onwards</h3>
+                <div id="nextList">
+                    {% if prescription %}
+                        {% for nd in prescription.next_day_instructions.all %}
+                        <div class="instruction-block" style="border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;">
+                            <div class="inline-row">
+                                <input type="text" name="next-{{ forloop.counter0 }}-bottle" placeholder="Bottle No." required value="{{ nd.bottle_no }}">
+                                <input type="text" name="next-{{ forloop.counter0 }}-pills" placeholder="Quantity" required value="{{ nd.no_of_pill }}">
+                                <select name="next-{{ forloop.counter0 }}-unit" required>
+                                  <option value="pill" {% if 'pill' in nd.no_of_pill or 'ગોળી' in nd.no_of_pill or 'ગોળીઓ' in nd.no_of_pill %}selected{% endif %}>Pill</option>
+                                  <option value="drop" {% if 'drop' in nd.no_of_pill or 'ટીપાં' in nd.no_of_pill %}selected{% endif %}>Drop</option>
+                                </select>
+                                <input type="text" name="next-{{ forloop.counter0 }}-special" placeholder="Special instruction" value="{{ nd.special_instruction }}">
+                            </div>
+                            <div class="inline-row" style="display:flex; gap:15px; align-items:center;">
+                                <label><input type="checkbox" name="next-{{ forloop.counter0 }}-time_morning" value="Morning" {% if 'Morning' in nd.time_of_day %}checked{% endif %}> Morning</label>
+                                <label><input type="checkbox" name="next-{{ forloop.counter0 }}-time_afternoon" value="Afternoon" {% if 'Afternoon' in nd.time_of_day %}checked{% endif %}> Afternoon</label>
+                                <label><input type="checkbox" name="next-{{ forloop.counter0 }}-time_evening" value="Evening" {% if 'Evening' in nd.time_of_day %}checked{% endif %}> Evening</label>
+                                <label><input type="checkbox" name="next-{{ forloop.counter0 }}-time_night" value="Night" {% if 'Night' in nd.time_of_day %}checked{% endif %}> Night</label>
+                            </div>
+                            <div class="inline-row" style="display:flex; justify-content:flex-start;">
+                                <button type="button" class="remove-btn">Remove</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" class="btn" id="addNext">Add another medicine</button>
+                <input type="hidden" id="nextTotal" name="next_TOTAL" value="{% if prescription %}{{ prescription.next_day_instructions.count }}{% else %}0{% endif %}">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn">Generate</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Live Preview</h2>
+        <pre id="preview" style="white-space: pre-wrap; background: var(--bg-soft); border:1px solid var(--border); padding:12px; border-radius:12px; min-height:300px;"></pre>
+    </div>
+</div>
+
+<style>
+.inline-row { display:grid; grid-template-columns: repeat(6, 1fr); gap:5px; margin-bottom:10px;}
+.remove-btn { background:#ef4444; color:#fff; border:none; border-radius:8px; padding:8px 10px; }
+.doctor-compact { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.doc-pill { display:flex; align-items:center; gap:6px; background: var(--bg-soft); border:1px solid var(--border); border-radius:999px; padding:6px 10px; }
+.doc-pill input { width:auto; }
+input[readonly] { background-color: #f3f4f6; cursor: not-allowed; }
+.inline-row input[name*="-pills"],
+.inline-row input[name*="-bottle"] { width: 100px; justify-self: start; }
+
+@media (max-width: 900px) {
+    .main-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 900px) {
+    .inline-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 720px) {
+    /* Stack prescription rows nicely on small screens */
+    .inline-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .inline-row select,
+    .inline-row input {
+        min-width: 0;
+    }
+}
+@media (max-width: 480px) {
+    .inline-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+const patientSelect = document.getElementById('patientSelect')
+const caseNumber = document.getElementById('caseNumber')
+const instructionType = document.getElementById('instructionType')
+const firstSection = document.getElementById('firstDaySection')
+const nextSection = document.getElementById('nextDaySection')
+const firstList = document.getElementById('firstList')
+const nextList = document.getElementById('nextList')
+const addFirst = document.getElementById('addFirst')
+const addNext = document.getElementById('addNext')
+const firstTotal = document.getElementById('firstTotal')
+const nextTotal = document.getElementById('nextTotal')
+const preview = document.getElementById('preview')
+const isEdit = !!document.getElementById('isEditFlag')
+const languageSelect = document.getElementById('languageSelect')
+
+patientSelect.addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex]
+  caseNumber.value = opt.getAttribute('data-case') || ''
+  updatePreview()
+})
+
+instructionType.addEventListener('change', function(){
+  if (isEdit) { updatePreview(); return }
+  const v = this.value
+  firstSection.style.display = v === 'first' ? '' : 'none'
+  nextSection.style.display = v === 'next' ? '' : 'none'
+  updatePreview()
+})
+
+function setupTimeValidation(row) {
+  const checkboxes = row.querySelectorAll('input[type="checkbox"][name*="-time"]');
+  if (checkboxes.length === 0) return;
+  
+  function validate() {
+    const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+    // Set validity on the first checkbox so the browser knows the group is invalid
+    // This enables the "Please fill out this field" tooltip on submit
+    checkboxes[0].setCustomValidity(anyChecked ? '' : 'Please fill out this field.');
+  }
+  
+  checkboxes.forEach(cb => cb.addEventListener('change', validate));
+  validate(); // Initial check
+}
+
+function bindFirstRowEvents(row) {
+  row.querySelector('.remove-btn').addEventListener('click', function(){ 
+      row.remove(); 
+      recomputeFirst(); 
+      updatePreview(); 
+  });
+  row.querySelectorAll('input, select').forEach(el => el.addEventListener('change', updatePreview));
+  setupTimeValidation(row);
+}
+
+function addFirstRow() {
+  const idx = parseInt(firstTotal.value || '0')
+  const row = document.createElement('div')
+  row.className = 'instruction-block'
+  row.style = 'border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;'
+  row.innerHTML = `
+    <div class="inline-row">
+        <select name="first-${idx}-size" required>
+          <option value="">Size</option>
+          <option value="Small">Small</option>
+          <option value="Medium">Medium</option>
+          <option value="Large">Large</option>
+        </select>
+        <input type="text" name="first-${idx}-label" placeholder="Label" required>
+        <input type="text" name="first-${idx}-pills" placeholder="Quantity" required>
+        <select name="first-${idx}-unit" required>
+          <option value="pill">Pill</option>
+          <option value="drop">Drop</option>
+        </select>
+        <input type="text" name="first-${idx}-special" placeholder="Special instruction">
+    </div>
+    <div class="inline-row" style="display:flex; gap:15px; align-items:center;">
+        <label><input type="checkbox" name="first-${idx}-time_morning" value="Morning"> Morning</label>
+        <label><input type="checkbox" name="first-${idx}-time_afternoon" value="Afternoon"> Afternoon</label>
+        <label><input type="checkbox" name="first-${idx}-time_evening" value="Evening"> Evening</label>
+        <label><input type="checkbox" name="first-${idx}-time_night" value="Night"> Night</label>
+    </div>
+    <div class="inline-row" style="display:flex; justify-content:flex-start;">
+        <button type="button" class="remove-btn">Remove</button>
+    </div>
+  `
+  firstList.appendChild(row)
+  bindFirstRowEvents(row)
+  firstTotal.value = idx + 1
+  updatePreview()
+}
+
+function bindNextRowEvents(row) {
+  row.querySelector('.remove-btn').addEventListener('click', function(){ 
+      row.remove(); 
+      recomputeNext(); 
+      updatePreview(); 
+  });
+  row.querySelectorAll('input, select').forEach(el => el.addEventListener('change', updatePreview));
+  setupTimeValidation(row);
+}
+
+function addNextRow() {
+  const idx = parseInt(nextTotal.value || '0')
+  const row = document.createElement('div')
+  row.className = 'instruction-block'
+  row.style = 'border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;'
+  row.innerHTML = `
+    <div class="inline-row">
+        <input type="text" name="next-${idx}-bottle" placeholder="Bottle No." required>
+        <input type="text" name="next-${idx}-pills" placeholder="Quantity" required>
+        <select name="next-${idx}-unit" required>
+          <option value="pill">Pill</option>
+          <option value="drop">Drop</option>
+        </select>
+        <input type="text" name="next-${idx}-special" placeholder="Special instruction">
+    </div>
+    <div class="inline-row" style="display:flex; gap:15px; align-items:center;">
+        <label><input type="checkbox" name="next-${idx}-time_morning" value="Morning"> Morning</label>
+        <label><input type="checkbox" name="next-${idx}-time_afternoon" value="Afternoon"> Afternoon</label>
+        <label><input type="checkbox" name="next-${idx}-time_evening" value="Evening"> Evening</label>
+        <label><input type="checkbox" name="next-${idx}-time_night" value="Night"> Night</label>
+    </div>
+    <div class="inline-row" style="display:flex; justify-content:flex-start;">
+        <button type="button" class="remove-btn">Remove</button>
+    </div>
+  `
+  nextList.appendChild(row)
+  bindNextRowEvents(row)
+  nextTotal.value = idx + 1
+  updatePreview()
+}
+
+function recomputeFirst(){
+  const rows = Array.from(firstList.children)
+  rows.forEach((row, newIdx) => {
+    Array.from(row.querySelectorAll('select,input')).forEach(inp => {
+      const name = inp.getAttribute('name')
+      if (name && name.startsWith('first-')) {
+        const parts = name.split('-')
+        parts[1] = String(newIdx)
+        inp.setAttribute('name', parts.join('-'))
+      }
+    })
+  })
+  firstTotal.value = rows.length
+}
+
+function recomputeNext(){
+  const rows = Array.from(nextList.children)
+  rows.forEach((row, newIdx) => {
+    Array.from(row.querySelectorAll('select,input')).forEach(inp => {
+      const name = inp.getAttribute('name')
+      if (name && name.startsWith('next-')) {
+        const parts = name.split('-')
+        parts[1] = String(newIdx)
+        inp.setAttribute('name', parts.join('-'))
+      }
+    })
+  })
+  nextTotal.value = rows.length
+}
+
+function updatePreview(){
+  const name = patientSelect.options[patientSelect.selectedIndex]?.text || ''
+  const caseNo = caseNumber.value || ''
+  const lang = languageSelect?.value || 'en'
+  const lines = []
+  if (lang === 'gu') {
+    lines.push('દવાઓ વિતરણ માટેની સૂચનાઓ')
+    lines.push('પ્રતિ,')
+    lines.push(`${name} (કેસ નં. ${caseNo}),`)
+    lines.push('તમે નીચે મુજબ ક્રમમાં હોમિયોપેથી દવા લેવી છે:')
+    lines.push('')
+    lines.push('પ્રથમ દિવસે:')
+  } else {
+    lines.push('Instructions for Medicinal Distribution')
+    lines.push('To,')
+    lines.push(`${name} (Case No. ${caseNo}),`)
+    lines.push('You have to take Homeopathic medicine in the following order:')
+    lines.push('')
+    lines.push('On first day:')
+  }
+  Array.from(firstList.children).forEach(row => {
+    const size = row.querySelector('select[name*="size"]').value
+    const label = row.querySelector('input[name*="label"]').value
+    const pills = row.querySelector('input[name*="pills"]').value
+    const unit = row.querySelector('select[name*="unit"]')?.value || 'pill'
+    const timeBoxes = Array.from(row.querySelectorAll('input[name*="-time"]')).filter(c => c.checked).map(c => c.value)
+    const time = timeBoxes.join(', ')
+    const special = row.querySelector('input[name*="special"]').value
+    const unitWord = unit === 'pill' ? 'pills' : 'drops'
+    let base = `☑ ${size} bottle: Labeled as '${label}': take ${pills} ${unitWord} at ${time}.`
+    if (special) base = `☑ ${size} bottle: Labeled as '${label}': take ${pills} ${unitWord} at ${time} ${special}`
+    lines.push(base)
+  })
+  lines.push('')
+  lines.push(lang === 'gu' ? 'આગલા દિવસોથી આગળ:' : 'From Next day onwards:')
+  Array.from(nextList.children).forEach(row => {
+    const bottle = row.querySelector('input[name*="bottle"]').value
+    const pills = row.querySelector('input[name*="pills"]').value
+    const unit = row.querySelector('select[name*="unit"]')?.value || 'pill'
+    const special = row.querySelector('input[name*="special"]').value
+    const timeBoxes = Array.from(row.querySelectorAll('input[name*="-time"]')).filter(c => c.checked).map(c => c.value)
+    const time = timeBoxes.join(', ')
+    const unitWord = unit === 'pill' ? 'pills' : 'drops'
+    let line = `☑ From Bottle No. ${bottle}: ${pills} ${unitWord} at ${time}.`
+    if (special) line = `☑ From Bottle No. ${bottle}: ${pills} ${unitWord} at ${time} ${special}`
+    lines.push(line)
+  })
+  lines.push('')
+  const ami = document.getElementById('docAmi')?.checked
+  const kaushal = document.getElementById('docKaushal')?.checked
+  if (ami && kaushal) {
+    lines.push('Dr. Ami Bhatt                Dr. Kaushal Bhatt')
+  } else if (ami) {
+    lines.push('Dr. Ami Bhatt')
+  } else if (kaushal) {
+    lines.push('Dr. Kaushal Bhatt')
+  } else {
+    lines.push('Dr. Ami Bhatt                Dr. Kaushal Bhatt')
+  }
+  preview.textContent = lines.join('\n')
+}
+
+addFirst.addEventListener('click', addFirstRow)
+addNext.addEventListener('click', addNextRow)
+if ((parseInt(firstTotal.value||'0') || firstList.children.length) === 0) {
+  addFirstRow()
+}
+
+// Attach dose change handlers to existing rows (for edit mode)
+function attachDoseHandlers() {
+  document.querySelectorAll('.dose-select').forEach(select => {
+    const row = select.closest('.inline-row')
+    const pillsInput = row.querySelector('input[name*="pills"]')
+    if (pillsInput && !select.hasAttribute('data-handler-attached')) {
+      select.setAttribute('data-handler-attached', 'true')
+      select.addEventListener('change', function() {
+        pillsInput.value = this.value || ''
+        updatePreview()
+      })
+      // Set initial value if dose is already selected
+      if (select.value) {
+        pillsInput.value = select.value
+      }
+    }
+  })
+}
+
+// Attach handlers on page load
+attachDoseHandlers()
+// Initialize existing first day rows (for edit mode)
+document.querySelectorAll('#firstList .instruction-block').forEach(bindFirstRowEvents);
+document.querySelectorAll('#nextList .instruction-block').forEach(bindNextRowEvents);
+updatePreview()
+</script>
+{% endblock body %}
+languageSelect.addEventListener('change', updatePreview)

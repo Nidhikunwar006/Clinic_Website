@@ -1,0 +1,169 @@
+{% extends 'clinic.html' %}
+{% load static %}
+{% block title %}Add New Patient | OM GAYATRI HOMEOPATHIC CLINIC{% endblock title %}
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+    /* Page typography overrides for a pleasant, clean look */
+    .header, .card, .form-field { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.2px; }
+    /* Labels in one horizontal row; inputs directly beneath each label */
+    .form-grid { display: block; }
+    .form-field { display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .form-field label { font-size: 14px; font-weight: 600; color: var(--muted); }
+    .form-field input, .form-field select, .form-field textarea {
+        height: 48px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid #000 !important;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 16px;
+        width: 100%;
+        max-width: 720px;
+        box-sizing: border-box;
+    }
+    .form-field textarea { height: auto; min-height: 80px; resize: vertical; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: #000 !important; box-shadow: 0 0 0 3px rgba(96,165,250,0.25); }
+    .form-field .errorlist { margin: 0; }
+    .form-errors { color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; }
+    .actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {color: white;border: 2px solid cadetblue;size:16px;}
+
+    /* Small-screen stacking for better mobile layout */
+    @media (max-width: 720px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .form-field {
+            grid-template-columns: 1fr;
+            align-items: flex-start;
+        }
+        .form-field label {
+            margin-bottom: 4px;
+        }
+        .actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+    /* Tidy up default Django error list */
+    .errorlist { margin: 0; padding: 0; list-style: none; color: #b91c1c; font-size: 13px; }
+</style>
+{% endblock head %}
+{% block body %}
+<div class="header">
+    <h1>Add New Patient</h1>
+    <div class="actions" style="margin-top:8px;">
+        <a class="btn" href="{% url 'Anand_Clinic:medicine_list' %}">Pharmacy</a>
+        <a class="btn" href="{% url 'Anand_Clinic:patient_list' %}">Patient List</a>
+    </div>
+</div>
+<div class="card">
+    <form id="addPatientForm" method="POST" enctype="multipart/form-data" autocomplete="off">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="form-grid">
+            <div class="form-field">
+                {{ form.case.label_tag }}
+                {{ form.case }}
+                {{ form.case.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.name.label_tag }}
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.age.label_tag }}
+                {{ form.age }}
+                {{ form.age.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.gender.label_tag }}
+                {{ form.gender }}
+                {{ form.gender.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.phone_no.label_tag }}
+                {{ form.phone_no }}
+                {{ form.phone_no.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.address.label_tag }}
+                {{ form.address }}
+                {{ form.address.errors }}
+            </div>
+            <div class="form-field">
+                <label>{{ form.doctor.label }}</label>
+                <div style="display: flex; gap: 20px; align-items: center; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                        <input type="radio" name="doctor" value="dr_1" {% if form.doctor.value == 'dr_1' %}checked{% endif %} required style="width: 14px; height: 14px; margin: 0;">
+                        <span style="font-size: 14px;">Dr. Ami Bhatt</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: normal;">
+                        <input type="radio" name="doctor" value="dr_2" {% if form.doctor.value == 'dr_2' %}checked{% endif %} required style="width: 14px; height: 14px; margin: 0;">
+                        <span style="font-size: 14px;">Dr. Kaushal Bhatt</span>
+                    </label>
+                </div>
+                {{ form.doctor.errors }}
+            </div>
+        </div>
+        <div class="actions">
+            <button class="btn" type="submit">Save Patient</button>
+            <button class="btn secondary" type="button" id="addCancel">Cancel</button>
+        </div>
+    </form>
+</div>
+    <script>
+    (function() {
+        const form = document.getElementById('addPatientForm');
+        const cancelBtn = document.getElementById('addCancel');
+
+        function clearForm(f) {
+            if (!f) return;
+            Array.from(f.elements).forEach(el => {
+                if (!el || !el.name) return;
+                try { el.autocomplete = 'off'; } catch (e) {}
+                const t = el.type ? el.type.toLowerCase() : el.tagName.toLowerCase();
+                if (el.name === 'csrfmiddlewaretoken') return;
+                if (t === 'hidden' || t === 'submit' || t === 'button') return;
+                if (t === 'checkbox' || t === 'radio') {
+                    el.checked = false;
+                    return;
+                }
+                if (el.tagName.toLowerCase() === 'select') {
+                    try { el.selectedIndex = 0; } catch (e) {}
+                    return;
+                }
+                try { el.value = ''; } catch (e) {}
+            });
+        }
+
+        // Clear on initial load to avoid browser autofill persisting values
+        if (form) {
+            clearForm(form);
+        }
+
+        // Also handle page navigation caching (back/forward) where browsers may restore form state
+        window.addEventListener('pageshow', function(ev) {
+            // Clear form regardless of persisted state to ensure user sees an empty form
+            clearForm(form);
+        });
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                clearForm(form);
+                const first = form.querySelector('input:not([type=hidden]), select, textarea');
+                if (first) first.focus();
+            });
+        }
+
+    })();
+</script>
+{% endblock body %}

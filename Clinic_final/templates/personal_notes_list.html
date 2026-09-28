@@ -1,0 +1,111 @@
+{% extends 'clinic.html' %}
+{% load static %}
+{% block title %}Personal Notes | {{ patient.name }} | OM GAYATRI HOMEOPATHIC CLINIC{% endblock title %}
+{% block head %}
+<style>
+    .notes-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .note-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(2, 6, 23, 0.06);
+    }
+    .note-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+    .note-date {
+        font-size: 13px;
+        color: var(--muted);
+    }
+    .note-text {
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text);
+        margin-bottom: 16px;
+        white-space: pre-wrap;
+    }
+    .note-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+    .note-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        cursor: zoom-in;
+        transition: transform 0.2s ease;
+    }
+    .note-image:hover {
+        transform: scale(1.05);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--muted);
+    }
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock head %}
+{% block body %}
+<div class="notes-container">
+    <div class="header">
+        <h1>Personal Notes - {{ patient.name }}</h1>
+        <div style="display: flex; gap: 10px;">
+            <a class="btn" href="{% url 'Anand_Clinic:patient_details' patient.pk %}">Back to Patient Details</a>
+        </div>
+    </div>
+    
+    {% if notes_with_images %}
+        {% for item in notes_with_images %}
+        <div class="note-card">
+            <div class="note-header">
+                <div>
+                    <strong>Note #{{ forloop.revcounter }}</strong>
+                    <div class="note-date">{{ item.note.created_at|date:"F d, Y h:i A" }}</div>
+                </div>
+                {% if item.note.updated_at != item.note.created_at %}
+                <div class="note-date">Updated: {{ item.note.updated_at|date:"F d, Y h:i A" }}</div>
+                {% endif %}
+            </div>
+            {% if item.note.note %}
+            <div class="note-text">{{ item.note.note }}</div>
+            {% endif %}
+            {% if item.image_urls %}
+            <div class="note-images">
+                {% for image_url in item.image_urls %}
+                <img src="{{ image_url }}" alt="Note image" class="note-image" onclick="window.open('{{ image_url }}', '_blank')">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card">
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <h3>No personal notes yet</h3>
+                <p>Start adding notes for this patient.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock body %}
+

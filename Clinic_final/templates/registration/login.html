@@ -1,0 +1,284 @@
+{% load widget_tweaks static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo {
+            width: 320px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .clinic-name {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0a5670;
+            text-align: left;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            margin-top: 6px;
+            border: 1px solid #aad8ff;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: #0091c9;
+            box-shadow: 0 0 6px rgba(0, 145, 201, 0.3);
+        }
+
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 28px;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 14px;
+            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.12);
+            animation: fadeIn 0.6s ease;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #9BC53D;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-size: 14px;
+            color: #333;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            margin-top: 6px;
+            border: 1px solid #aad8ff;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus {
+            border-color: #0091c9;
+            box-shadow: 0 0 6px rgba(0, 145, 201, 0.3);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #0091c9;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: #047aa7;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 18px;
+        }
+
+        .links a {
+            font-size: 14px;
+            color: #0179a1;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #ffd0d0;
+            padding: 8px;
+            color: #7a0000;
+            border-left: 4px solid #b30000;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .password-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-field {
+            width: 100%;
+            padding-right: 40px;
+        }
+
+        /* Hide default browser password reveal icon (e.g. Edge) so only our custom eye shows */
+        .password-field::-ms-reveal,
+        .password-field::-ms-clear {
+            display: none;
+        }
+
+        #toggle-eye {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 16px;
+        }
+    </style>
+    <style>
+        @media (max-width: 480px) {
+            .login-container { padding: 18px; border-radius: 10px; }
+            .logo { width: 260px; height: auto; }
+            .title { font-size: 22px; }
+            .subtitle { font-size: 13px; }
+        }
+    </style>
+</head>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const pwd = document.getElementById("id_password");
+    const eye = document.getElementById("toggle-eye");
+
+    if (!pwd || !eye) {
+        console.log("ERROR: Element not found", pwd, eye);
+        return;
+    }
+
+    eye.addEventListener("click", () => {
+    if (pwd.type === "password") {
+        pwd.type = "text";                   
+        eye.classList.add("fa-eye");
+        eye.classList.remove("fa-eye-slash");
+    } 
+    else {
+        pwd.type = "password";               
+        eye.classList.add("fa-eye-slash");
+        eye.classList.remove("fa-eye");
+    }
+    });
+});
+</script>
+
+
+
+<body>
+    <div class="login-container">
+
+        <div class="logo-wrap">
+            <img src="{% static 'logowithname.jpg' %}" alt="Clinic Logo" class="logo">
+        </div>
+
+        <div class="title"><b>Welcome Back</b></div>
+        <div class="subtitle">Log in to continue</div>
+
+        {% if form.errors %}
+        <div class="error-message">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    {{ error }}<br>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if messages %}
+            {% for msg in messages %}
+                {% if 'error' in msg.tags %}
+                    <div class="error-message">{{ msg }}</div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="input-group">
+                <label for="id_username">Username</label>
+                {{ form.username|add_class:"input-field" }}
+            </div>
+
+            <div class="input-group">
+                <label for="id_password">Password</label>
+                <div class="password-wrap">
+                    {{ form.password|add_class:"input-field password-field" }}
+                    <i id="toggle-eye" class="fa-solid fa-eye-slash"></i>
+                </div>
+            </div>
+
+            <button class="btn-login" type="submit">Login</button>
+
+            <div class="links">
+                <a href="{% url 'Anand_Clinic:forgot_password' %}" class="btn btn-link">Forgot Password?</a>
+            </div>
+
+            <div class="links">
+                <a href="{% url 'Anand_Clinic:password_reset_manual' %}">Reset Password?</a>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

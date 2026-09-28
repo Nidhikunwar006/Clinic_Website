@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OM GAYATRI HOMEOPATHIC CLINIC{% endblock title %}</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg-soft: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --primary: #8b5cf6; /* lavender */
+            --primary-2: #14b8a6; /* teal */
+            --primary-3: #60a5fa; /* soft blue */
+            --card: #ffffff;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --success: #10b981;
+        }
+
+        html, body { height: 100%; }
+        body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: #ffffff; color: var(--text); }
+        .layout { display: block; min-height: 100vh; }
+        .brand { font-weight: 700; font-size: 18px; margin-bottom: 18px; letter-spacing: 0.3px; color: #0b1220; }
+        .nav { list-style: none; padding: 0; margin: 0; }
+        .nav li { margin-bottom: 8px; }
+        .nav a {
+            color: #0b1220;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            position: relative;
+            transition: background-color 200ms ease, transform 120ms ease, color 200ms ease, box-shadow 200ms ease;
+        }
+        .nav a:hover { background: rgba(139,92,246,0.15); transform: translateX(2px); box-shadow: inset 0 0 0 1px rgba(139,92,246,0.25); }
+        .nav a.active { background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(20,184,166,0.25)); box-shadow: 0 6px 18px rgba(96,165,250,0.25); }
+
+        .content { padding: 28px; box-sizing: border-box; display: flex; gap: 0; position: relative; }
+        .main-content { flex: 1; padding-right: 20px; }
+        .form-panel { 
+            width: min(380px, 96%);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px 0 0 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            max-height: 90vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+        }
+        .form-panel form {
+            max-height: calc(90vh - 60px);
+        }
+        /* Custom scrollbar for form panels */
+        .form-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .form-panel::-webkit-scrollbar-track {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        .form-panel::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        .form-panel::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-2);
+        }
+        .form-panel.show { display: block; }
+        /* Smooth open/close for add patient form (bloom up) */
+        @keyframes formEnter { from { opacity: 0; transform: translateY(26px) scale(.985); filter: blur(.4px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+        @keyframes formExit { to { opacity: 0; transform: translateY(18px) scale(.985); } }
+        .form-panel.anim-enter { animation: formEnter 300ms cubic-bezier(.22,.61,.36,1); }
+        .form-panel.anim-exit { animation: formExit 260ms ease forwards; }
+        /* Staggered field fade for form groups */
+        @keyframes fieldFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group.stagger { opacity: 0; animation: fieldFadeIn 320ms ease forwards; animation-delay: var(--delay, 0ms); }
+        .header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+            background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(20,184,166,0.12));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            position: static;
+        }
+        .header h1 { margin: 0; font-size: 20px; letter-spacing: 0.2px; }
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+        
+        .home-layout { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .logo-section { display: flex; align-items: center; gap: 20px; }
+        .brand-banner { width: 420px; max-width: 60vw; height: auto; max-height:120px; object-fit: contain; }
+        .action-buttons { display: flex; gap: 15px; }
+        .action-btn { 
+            background: linear-gradient(135deg, var(--primary-2), var(--primary-3)); 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            text-decoration: none; 
+            font-weight: 500;
+            transition: transform 120ms ease, box-shadow 200ms ease;
+        }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20,184,166,0.3); }
+        
+        .main-content-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .main-content-grid.form-active { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
+        .scrollable-section { max-height: 400px; overflow-y: auto; }
+        .scrollable-section::-webkit-scrollbar { width: 6px; }
+        .scrollable-section::-webkit-scrollbar-track { background: var(--border); border-radius: 3px; }
+        .scrollable-section::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+        .scrollable-section::-webkit-scrollbar-thumb:hover { background: var(--primary-2); }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.06);
+        }
+
+        .toolbar { display: flex; gap: 10px; align-items: center; margin: 10px 0 12px 0; flex-wrap: wrap; }
+        .toolbar label { font-size: 12px; color: var(--muted); margin-right: 6px; }
+        .toolbar select, .toolbar input[type="month"], .toolbar input[type="text"] { 
+            padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-soft); color: var(--text); font-size: 13px;
+        }
+        .toolbar .btn-clear { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: #f1f5f9; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 220ms ease-in; }
+        /* Smoother details slide-in and home slide-in */
+        @keyframes detailSlideIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: translateX(0); } }
+        .detail-enter { animation: detailSlideIn 420ms cubic-bezier(.22,.61,.36,1); }
+        @keyframes detailSlideOut { to { opacity: 0; transform: translateX(18px); } }
+        .detail-exit { animation: detailSlideOut 300ms ease forwards; }
+        @keyframes listSlideInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+        .list-enter { animation: listSlideInLeft 420ms cubic-bezier(.22,.61,.36,1); }
+        /* Submit/Cancel button micro-interactions */
+        @keyframes pulseOnce { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+        .btn.pulse-once { animation: pulseOnce 240ms ease; }
+        @keyframes checkPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+        .btn.success-check { position: relative; }
+        .btn.success-check::after { content: '\2713'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; opacity: 0; animation: checkPop 300ms ease 120ms forwards; font-weight: 700; }
+
+        .btn {
+            display: inline-block; background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; border: none;
+            border-radius: 12px; padding: 10px 14px; text-decoration: none; cursor: pointer; transition: transform 120ms ease, box-shadow 200ms ease, filter 120ms ease;
+            box-shadow: 0 8px 18px rgba(139,92,246,0.35);
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(96,165,250,0.35); filter: brightness(1.04); }
+        .btn.secondary { background: #94a3b8; box-shadow: none; }
+        
+        .btn.add-patient {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            box-shadow: 0 8px 20px rgba(255,107,107,0.4);
+            font-weight: 600;
+            font-size: 16px;
+            padding: 12px 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            animation: pulse-glow 2s infinite;
+        }
+        .btn.add-patient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255,107,107,0.5);
+            filter: brightness(1.1);
+            animation: none;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 8px 20px rgba(255,107,107,0.4); }
+            50% { box-shadow: 0 8px 25px rgba(255,107,107,0.6); }
+        }
+
+        .list { list-style: none; padding: 0; margin: 0; }
+        .list li { padding: 12px 10px; border-bottom: 1px dashed var(--border); }
+        .list a { color: #0f172a; text-decoration: none; }
+        .list a:hover { text-decoration: underline; }
+        .patient-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+        .patient-info { display:flex; align-items:center; gap:10px; flex-wrap:nowrap; min-width:0; }
+        .patient-info strong { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .patient-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+        .patient-actions .btn { order:2; }
+        .patient-actions .follow-btn { order:1; }
+
+        /* Follow-up row layout: keep name+doctor left, date aligned to right on same line */
+        .followup-row { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; flex-wrap:wrap; }
+        .followup-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .followup-left strong { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .followup-left .badge { margin-left: 6px; }
+
+        .badge { display: inline-block; padding: 2px 8px; font-size: 12px; border-radius: 999px; background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.25); }
+        .badge.doctor-ami { background: #d6e8ff; color: #4b9dd0; border: 1px solid #80bfff; font-weight: 600; }
+        /* Keep non-Ami doctors using the default .badge styling (green) */
+        .badge.date-badge { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(20,184,166,0.2)); color: var(--text); border: 1px solid rgba(139,92,246,0.3); font-weight: 600; font-size: 13px; padding: 4px 10px; }
+        .badge--early { background-color: rgba(16,185,129,0.15); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+        .badge--late { background-color: rgba(239,68,68,0.12); color: #b91c1c; border: 1px solid rgba(239,68,68,0.2); }
+        .badge--normal { background-color: rgba(99,102,241,0.12); color: #4f46e5; border: 1px solid rgba(99,102,241,0.2); }
+
+        .follow-btn {
+            background: linear-gradient(135deg, #8b5cf6, #14b8a6);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: transform 120ms ease, box-shadow 200ms ease, filter 120ms ease;
+            box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+        }
+        .follow-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(139,92,246,0.4); filter: brightness(1.05); }
+        .follow-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+        .follow-btn.scheduled {
+            background: #cbd5e1;
+            color: #64748b;
+        }
+
+        .btn.small { padding: 6px 8px; font-size: 12px; border-radius: 8px; background: #06b6d4; box-shadow: none; }
+        .btn.small:hover { transform: translateY(-1px); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg-soft); color: var(--text); font-size: 14px;
+            transition: border-color 200ms ease, box-shadow 200ms ease;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+        }
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-close { background: #94a3b8; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+        .btn-close:hover { background: #64748b; }
+
+        @media (max-width: 1200px) {
+            .content { flex-direction: column; }
+            .form-panel { width: 100%; position: static; }
+            .main-content-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 960px) {
+            .home-layout { flex-direction: column; gap: 20px; text-align: center; }
+            .action-buttons { flex-wrap: wrap; justify-content: center; }
+            .main-content-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Improved responsiveness for Check-ins / Follow-ups lists */
+        @media (max-width: 720px) {
+            .patient-row, .followup-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .patient-info, .followup-left { width: 100%; }
+            .patient-actions { width: 100%; justify-content: space-between; margin-top: 6px; }
+            .patient-info strong, .followup-left strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .badge.date-badge { font-size: 12px; padding: 4px 8px; }
+        }
+
+        /* Ensure printing only the injected patient detail content */
+        @media print {
+            body * { visibility: hidden !important; }
+            #patientDetailSection, #patientDetailSection * { visibility: visible !important; }
+            #patientDetailSection { position: absolute; left: 0; top: 0; width: 100%; }
+            /* Hide elements marked as no-print during printing */
+            .no-print { display: none !important; visibility: hidden !important; }
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            padding: 12px 18px 0 18px;
+        }
+        .topbar-logo {
+            width: auto;
+            height: auto;
+            max-height: 100px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        .logout-btn {
+            margin-left: auto;
+            background: #0b82c1;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(11,130,193,0.15);
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+        .logout-btn:hover { background: #086b9d; transform: translateY(-1px); }
+ 
+    </style>
+
+    {% load static %}
+    {% block head %}{% endblock head %}
+    
+</head>
+<body>
+    <div class="topbar">
+        {% if request.user.groups.all.0.name == "Receptionist" %}
+            <img src="{% static 'logowithname.jpg' %}" alt="OM GAYATRI HOMEOPATHIC CLINIC" class="topbar-logo">
+        {% endif %}
+        <a class="logout-btn" href="{% url 'Anand_Clinic:logout' %}">Logout</a>
+    </div>
+    <div class="layout">
+        <main class="content">
+            <div class="main-content">
+                {% block body %}
+                <div class="home-layout">
+                    <div class="logo-section">
+                        <img src="{% static 'logowithname.jpg' %}" alt="OM GAYATRI HOMEOPATHIC CLINIC" class="brand-banner" id="homeBrandBanner">
+                    </div>
+                    <div class="action-buttons">
+                        <a href="{% url 'Anand_Clinic:medicine_list' %}" class="action-btn">Pharmacy</a>
+                        <a href="{% url 'Anand_Clinic:prescription_generator_create' %}" class="action-btn">Prescription</a>
+                        <a href="{% url 'Anand_Clinic:checkin_list' %}" class="action-btn">Check-ins</a>
+                        <a href="#patientForm" class="btn add-patient" onclick="toggleForm()">Add New Patient</a>
+                    </div>
+                </div>
+                <div class="main-content-grid">
+                    <div class="card no-print">
+                        <h2 id="patientCardTitle">Patient List</h2>
+                        {% if not hide_toolbar %}
+                        <div class="toolbar" id="patientToolbar">
+                            <div>
+                                <label for="sortPatients">Sort by</label>
+                                <select id="sortPatients">
+                                    <option value="date" selected>Date</option>
+                                    <option value="name">Name</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="patientSearch">Search</label>
+                                <input type="text" id="patientSearch" placeholder="Search by name, case, or phone">
+                            </div>
+                            <div>
+                                <label for="filterMonth">Filter by</label>
+                                <input type="month" id="filterMonth">
+                                <button type="button" class="btn-clear" id="clearFilters">Clear</button>
+                            </div>
+                        </div>
+                        <div id="patientListSection" class="scrollable-section">
+                            <ul class="list">
+                                {% for patient in patients %}
+                                <li data-case="{{ patient.case|default:''|lower }}" data-case-no="{{ patient.case_no }}" data-phone="{{ patient.phone_no }}" data-name="{{ patient.name|lower }}" data-date="{{ patient.appointment_date|date:'Y-m-d H:i' }}">
+                                    <div class="patient-row">
+                                        <div class="patient-info" style="display:flex; align-items:center; gap:10px;">
+                                            <span class="badge case-badge">{{ patient.case }}</span>
+                                            <strong>{{ patient.name }}</strong>
+                                            <span class="badge {% if 'Ami' in patient.get_doctor_display %}doctor-ami{% endif %}">{{ patient.get_doctor_display }}</span>
+                                        </div>
+                                        <div class="patient-actions" style="display:flex; align-items:center; gap:10px;">
+                                            <button class="follow-btn {% if patient.scheduled_followups_count|default:0 > 0 %}scheduled{% endif %}" data-patient-id="{{ patient.pk }}" {% if patient.scheduled_followups_count|default:0 > 0 %}disabled{% endif %}>
+                                                Follow up{% if patient.scheduled_followups_count|default:0 > 0 %} ({{ patient.scheduled_followups_count }}){% endif %}
+                                            </button>
+                                            <a class="btn" href="{% url 'Anand_Clinic:patient_details' patient.case_no %}">View Details</a>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li>No patients found.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div id="patientDetailSection" class="scrollable-section" style="display: none;"></div>
+                        {% endif %} 
+                    </div>
+                    
+                    {% if not hide_side_cards %}
+                    <div class="card no-print">
+                        <h2>Follow Ups</h2>
+                        <div class="toolbar" id="followupToolbar">
+                            <div>
+                                <label for="followupSearch">Search</label>
+                                <input type="text" id="followupSearch" placeholder="Search by patient name...">
+                            </div>
+                        </div>
+                        <div class="scrollable-section">
+                            <ul class="list" id="followups-list">
+                                {% for followup in followups %}
+                                <li id="followup-{{ followup.pk }}" data-patient-name="{{ followup.patient.name|lower }}" data-scheduled-date="{{ followup.scheduled_date|date:'Y-m-d H:i' }}" data-followup-status="{{ followup.status }}">
+                                    <div class="followup-row">
+                                        <div class="followup-left">
+                                            <strong>{{ followup.patient.name }}</strong>
+                                            <span class="badge {% if 'Ami' in followup.patient.get_doctor_display %}doctor-ami{% endif %}">{{ followup.patient.get_doctor_display }}</span>
+                                        </div>
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span class="badge date-badge">{{ followup.scheduled_date|date:"M d, Y H:i" }}</span>
+                                            <button class="btn small checkin-btn" data-followup-id="{{ followup.pk }}">Check-in</button>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li id="empty-followups-msg">No scheduled follow-ups</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Check-ins (Today)</h2>
+                        <div class="toolbar" id="checkinToolbar">
+                            <div>
+                                <label>Showing today's check-ins</label>
+                            </div>
+                        </div>
+                        <div class="scrollable-section">
+                            <ul class="list" id="checkins-list">
+                                {% for checkin in today_checkins %}
+                                <li data-patient-name="{{ checkin.followup.patient.name|lower }}" data-checkin-time="{{ checkin.checkin_time|date:'Y-m-d H:i' }}">
+                                    <div class="followup-row">
+                                        <div class="followup-left">
+                                            <strong>{{ checkin.followup.patient.name }}</strong>
+                                            <span class="badge {% if 'Ami' in checkin.followup.patient.get_doctor_display %}doctor-ami{% endif %}">{{ checkin.followup.patient.get_doctor_display }}</span>
+                                        </div>
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span class="badge date-badge">{{ checkin.checkin_time|date:"M d, Y H:i" }}</span>
+                                            <span class="badge {% if checkin.status == 'early' %}badge--early{% elif checkin.status == 'late' %}badge--late{% else %}badge--normal{% endif %}">
+                                                {{ checkin.get_status_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li id="empty-checkins-msg">No check-ins today</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endblock body %}
+            </div>
+            
+            <div class="form-panel" id="patientForm">
+                <h3>Add New Patient</h3>
+                <form id="patientPanelForm" method="post" action="{% url 'Anand_Clinic:add_patient' %}" autocomplete="off">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="case">Case</label>
+                        <input type="text" id="case" name="case" autocomplete="off" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Patient Name</label>
+                        <input type="text" id="name" name="name" autocomplete="off" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" name="age" autocomplete="off" min="0" step="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" autocomplete="off" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone_no">Phone Number</label>
+                        <input type="tel" id="phone_no" name="phone_no" autocomplete="off" inputmode="numeric" maxlength="10" pattern="\d{1,10}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <textarea id="address" name="address" autocomplete="off" rows="3" required></textarea>
+                    </div>
+                    <!-- appointment_date is set automatically to current date/time -->
+                    <div class="form-group">
+                        <label for="doctor">Doctor</label>
+                        <select id="doctor" name="doctor" required>
+                            <option value="">Select Doctor</option>
+                            <option value="dr_1">Dr. Ami Bhatt</option>
+                            <option value="dr_2">Dr. Kaushal Bhatt</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Save Patient</button>
+                        <button type="button" class="btn-close" onclick="toggleForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Follow-up modal -->
+    <div id="followup-modal" style="display:none; position:fixed; left:0; right:0; top:0; bottom:0; z-index:2000;
+            align-items:center; justify-content:center; background:rgba(0,0,0,0.5);">
+        <div style="background:#fff; padding:20px; border-radius:8px; width:320px; box-shadow: 0 12px 32px rgba(0,0,0,0.15);">
+            <h3 style="margin-top:0; margin-bottom:16px;">Schedule Follow-up</h3>
+            <form id="followup-form">
+            <input type="hidden" name="patient_id" id="fu-patient-id">
+            <label style="display:block; margin-bottom:8px; font-weight:500;">
+                Date & time
+                <input id="fu-datetime" name="scheduled_date" type="datetime-local" required style="width:100%; padding:8px; margin-top:4px; border:1px solid #e2e8f0; border-radius:6px; box-sizing:border-box;">
+            </label>
+            <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;">
+                <button type="button" id="fu-cancel" style="padding:8px 12px; border:1px solid #e2e8f0; background:#f1f5f9; border-radius:6px; cursor:pointer;">Cancel</button>
+                <button type="submit" style="padding:8px 12px; background:#8b5cf6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Schedule</button>
+            </div>
+            </form>
+            <div id="fu-error" style="color:#dc2626; margin-top:12px; display:none; font-size:13px;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Global reference for follow-up handler
+        let attachFollowupHandlers = null;
+
+        function toggleForm() {
+            const formPanel = document.getElementById('patientForm');
+            const mainContent = document.querySelector('.main-content');
+            const mainContentGrid = document.querySelector('.main-content-grid');
+            // Clear fields when opening the panel to avoid showing previous inputs
+            function clearPatientPanelForm() {
+                try {
+                    const f = document.getElementById('patientPanelForm');
+                    if (!f) return;
+                    Array.from(f.elements).forEach(el => {
+                        if (!el || !el.name) return;
+                        try { el.autocomplete = 'off'; } catch (e) {}
+                        const t = el.type ? el.type.toLowerCase() : el.tagName.toLowerCase();
+                        if (el.name === 'csrfmiddlewaretoken') return;
+                        if (t === 'hidden' || t === 'submit' || t === 'button') return;
+                        if (t === 'checkbox' || t === 'radio') { el.checked = false; return; }
+                        if (el.tagName.toLowerCase() === 'select') { try { el.selectedIndex = 0; } catch (e) {} ; return; }
+                        try { el.value = ''; } catch (e) {}
+                    });
+                } catch (err) { console.warn('clearPatientPanelForm failed', err); }
+            }
+            if (formPanel.classList.contains('show')) {
+                // smooth exit
+                formPanel.classList.add('anim-exit');
+                setTimeout(() => { formPanel.classList.remove('anim-exit'); formPanel.classList.remove('show'); }, 240);
+                mainContent.style.flex = '1';
+                mainContentGrid.classList.remove('form-active');
+            } else {
+                formPanel.classList.add('show');
+                formPanel.classList.add('anim-enter');
+                setTimeout(() => formPanel.classList.remove('anim-enter'), 320);
+                mainContent.style.flex = '0 0 65%';
+                mainContentGrid.classList.add('form-active');
+                // ensure the panel's form is cleared when opened
+                clearPatientPanelForm();
+                // Stagger fields one by one
+                const fields = formPanel.querySelectorAll('.form-group');
+                fields.forEach((fg, idx) => {
+                    fg.classList.add('stagger');
+                    fg.style.setProperty('--delay', (70 * idx) + 'ms');
+                });
+            }
+        }
+        
+        // Close form when clicking outside
+        document.addEventListener('click', function(event) {
+            const formPanel = document.getElementById('patientForm');
+            const addButton = document.querySelector('.btn.add-patient');
+            const mainContent = document.querySelector('.main-content');
+            const mainContentGrid = document.querySelector('.main-content-grid');
+            
+            if (formPanel.classList.contains('show') && 
+                !formPanel.contains(event.target) && 
+                !addButton.contains(event.target)) {
+                formPanel.classList.remove('show');
+                // also reset the inline form to avoid leaving values visible when reopened
+                try { const f = document.getElementById('patientPanelForm'); if (f) f.reset(); } catch(e){}
+                mainContent.style.flex = '1';
+                mainContentGrid.classList.remove('form-active');
+            }
+        });
+
+        // Handle Add Patient submit via AJAX: save, close panel, refresh list
+        (function attachPatientFormSubmitHandler() {
+            const formPanel = document.getElementById('patientForm');
+            if (!formPanel) return;
+            const formEl = formPanel.querySelector('form');
+            if (!formEl) return;
+            formEl.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const submitBtn = formEl.querySelector('button[type="submit"]');
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
+
+                try {
+                    const formData = new FormData(formEl);
+                    await fetch(formEl.getAttribute('action'), {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+
+                    // Refresh the patient list from the server-rendered home page
+                    const refreshed = await fetch(window.location.pathname + (window.location.search ? '&' : '?') + '_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store' });
+                    const html = await refreshed.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newListSection = doc.querySelector('#patientListSection');
+                    const currentListSection = document.querySelector('#patientListSection');
+                    if (newListSection && currentListSection) {
+                        currentListSection.innerHTML = newListSection.innerHTML;
+                        // Ensure delegation handler is set up (in case container was replaced)
+                        if (window.setupFollowupDelegation) {
+                            window.setupFollowupDelegation();
+                        }
+                        // Reattach follow-up button handlers after list refresh
+                        attachFollowupHandlers();
+                        if (window.applyPatientFilters) window.applyPatientFilters();
+                    }
+
+                    // Use the existing toggleForm() to close then reopen the panel
+                    try {
+                        // close
+                        if (typeof toggleForm === 'function') toggleForm();
+                        // reopen after the exit animation duration so open logic clears fields
+                        setTimeout(() => { try { if (typeof toggleForm === 'function') toggleForm(); } catch(e){} }, 300);
+                    } catch (e) { console.warn('Could not collapse/reopen patient panel via toggleForm', e); }
+
+                    const listSection = document.getElementById('patientListSection');
+                    const detailSection = document.getElementById('patientDetailSection');
+                    if (listSection) listSection.style.display = 'block';
+                    if (detailSection) { detailSection.style.display = 'none'; detailSection.innerHTML = ''; }
+
+                    const title = document.getElementById('patientCardTitle');
+                    if (title) title.textContent = 'Patient List';
+                    // brief success pulse on Save button
+                    try {
+                        submitBtn.classList.add('pulse-once');
+                        setTimeout(() => submitBtn.classList.remove('pulse-once'), 400);
+                    } catch (e) {}
+                    // Slide-in list when returning
+                    const homeList = document.getElementById('patientListSection');
+                    if (homeList) { homeList.classList.add('list-enter'); setTimeout(() => homeList.classList.remove('list-enter'), 420); }
+                } catch(err) {
+                    console.error('Failed to save patient', err);
+                } finally {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Save Patient'; }
+                }
+            });
+        })();
+
+        // Ensure form is cleared if the page is restored from bfcache (back/forward)
+        window.addEventListener('pageshow', function(ev) {
+            try {
+                const f = document.getElementById('patientPanelForm');
+                if (!f) return;
+                try { f.reset(); } catch (e) {}
+                Array.from(f.elements).forEach(el => { try { if (el && el.name) el.autocomplete = 'off'; } catch(e){} });
+            } catch (err) { /* ignore */ }
+        });
+
+        // Lightweight polling to auto-refresh patient list across tabs
+        (function livePatientListSync() {
+            const POLL_MS = 8000; // adjust as needed
+            let lastSnapshot = '';
+
+            async function refreshIfChanged() {
+                const listSection = document.getElementById('patientListSection');
+                const detailSection = document.getElementById('patientDetailSection');
+                const formPanel = document.getElementById('patientForm');
+                if (!listSection) return;
+
+                // Skip while detail is open or form is open to avoid disrupting user
+                const detailOpen = detailSection && detailSection.style.display !== 'none' && detailSection.style.display !== '';
+                const formOpen = formPanel && formPanel.classList.contains('show');
+                if (detailOpen || formOpen) return;
+
+                try {
+                    const res = await fetch(window.location.pathname + (window.location.search ? '&' : '?') + '_=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' });
+                    const html = await res.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const incoming = doc.querySelector('#patientListSection');
+                    if (!incoming) return;
+                    const incomingHTML = incoming.innerHTML.trim();
+                    if (!lastSnapshot) lastSnapshot = listSection.innerHTML.trim();
+                    if (incomingHTML !== lastSnapshot) {
+                        listSection.innerHTML = incomingHTML;
+                        lastSnapshot = incomingHTML;
+                        // Re-attach handlers after list refresh
+                        if (attachFollowupHandlers) attachFollowupHandlers();
+                        if (window.applyPatientFilters) window.applyPatientFilters();
+                    }
+                } catch (_) { /* ignore transient errors */ }
+            }
+
+            setInterval(refreshIfChanged, POLL_MS);
+            // Initial snapshot
+            const cur = document.getElementById('patientListSection');
+            if (cur) lastSnapshot = cur.innerHTML.trim();
+        })();
+
+        // Inline details view loader without changing detail template
+        (function () {
+            const listSection = document.getElementById('patientListSection');
+            const detailSection = document.getElementById('patientDetailSection');
+            if (!listSection || !detailSection) return;
+            // Interactive: banner toggles quick actions
+            const banner = document.getElementById('homeBrandBanner');
+            const actions = document.querySelector('.action-buttons');
+            if (banner && actions) {
+                banner.addEventListener('click', function () {
+                    actions.classList.toggle('expanded');
+                    if (actions.classList.contains('expanded')) {
+                        actions.style.transform = 'scale(1.01)';
+                        actions.style.transition = 'transform 160ms ease';
+                    } else {
+                        actions.style.transform = 'scale(1)';
+                    }
+                });
+            }
+
+            listSection.addEventListener('click', async function(event) {
+                const anchor = event.target.closest('a');
+                if (!anchor) return;
+                const isViewBtn = anchor.matches('a.btn') && anchor.textContent.trim().toLowerCase() === 'view details';
+                if (!isViewBtn) return;
+                event.preventDefault();
+
+                try {
+                    const res = await fetch(anchor.getAttribute('href'));
+                    const html = await res.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    // Pull over detail-specific styles so print and layout match the original
+                    const detailStyles = Array.from(doc.querySelectorAll('head style, head link[rel="stylesheet"]'));
+                    const appendedStyleNodes = [];
+                    detailStyles.forEach(node => {
+                        const copy = node.cloneNode(true);
+                        copy.setAttribute('data-detail-style', 'true');
+                        document.head.appendChild(copy);
+                        appendedStyleNodes.push(copy);
+                    });
+
+                    // Compose header and content exactly as in the detail page
+                    const header = doc.querySelector('.header');
+                    const printArea = doc.querySelector('.print-area') || doc.querySelector('.card');
+
+                    const headerHtml = header ? header.outerHTML : '';
+                    const bodyHtml = printArea ? printArea.outerHTML : (doc.body ? doc.body.innerHTML : '');
+                    detailSection.innerHTML = headerHtml + bodyHtml;
+
+                    listSection.style.display = 'none';
+                    detailSection.style.display = 'block';
+                    detailSection.classList.add('detail-enter');
+                    const toolbar = document.getElementById('patientToolbar');
+                    if (toolbar) toolbar.style.display = 'none';
+
+                    // Hide side cards (follow-ups and check-ins) when detail is injected
+                    try {
+                        const followCard = document.getElementById('followups-list') ? document.getElementById('followups-list').closest('.card') : null;
+                        if (followCard) followCard.style.display = 'none';
+                        const checkinCard = document.getElementById('checkins-list') ? document.getElementById('checkins-list').closest('.card') : null;
+                        if (checkinCard) checkinCard.style.display = 'none';
+                    } catch (err) { console.warn('Could not hide side cards', err); }
+
+                    const title = document.getElementById('patientCardTitle');
+                    if (title) title.textContent = 'Patient Details';
+                    
+                    // Enable Personal Note interaction for injected detail
+                    try {
+                        const href = anchor.getAttribute('href') || '';
+                        const pkMatch = href.match(/detail\/(\d+)\//);
+                        const pk = pkMatch ? pkMatch[1] : null;
+                        const noteBtn = detailSection.querySelector('#personalNoteBtn');
+                        const dropdown = detailSection.querySelector('#personalNoteDropdown');
+                        const addNoteBtn = detailSection.querySelector('#addNoteBtn');
+                        const modal = detailSection.querySelector('#personalNoteModal');
+                        const txt = detailSection.querySelector('#personalNoteText');
+                        const imgInput = detailSection.querySelector('#personalNoteImage');
+                        const previewList = detailSection.querySelector('#personalNotePreviewList');
+                        const statusEl = detailSection.querySelector('#personalNoteStatus');
+                        const cancelBtn = detailSection.querySelector('#personalNoteCancel');
+                        const saveBtn = detailSection.querySelector('#personalNoteSave');
+
+                        function getCookie(name) {
+                            const value = `; ${document.cookie}`;
+                            const parts = value.split(`; ${name}=`);
+                            if (parts.length === 2) return parts.pop().split(';').shift();
+                        }
+                        
+                        function openModal() { 
+                            if (modal) modal.style.display = 'flex';
+                            // Clear form when opening for new note
+                            if (txt) txt.value = '';
+                            if (previewList) {
+                                previewList.innerHTML = '';
+                                previewList.style.display = 'none';
+                            }
+                            if (imgInput) imgInput.value = '';
+                            if (statusEl) {
+                                statusEl.style.display = 'none';
+                                statusEl.textContent = '';
+                            }
+                        }
+                        
+                        function closeModal() { 
+                            if (modal && statusEl) { 
+                                modal.style.display = 'none'; 
+                                statusEl.style.display='none'; 
+                                statusEl.textContent=''; 
+                            } 
+                        }
+                        
+                        function saveNote() {
+                            if (!pk) return;
+                            const url = `/detail/${pk}/personal-note/save/`;
+                            const fd = new FormData();
+                            if (txt) fd.append('note', txt.value || '');
+                            if (imgInput && imgInput.files && imgInput.files.length) {
+                                for (let i = 0; i < imgInput.files.length; i++) {
+                                    fd.append('image', imgInput.files[i]);
+                                }
+                            }
+                            fetch(url, {
+                                method: 'POST',
+                                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' },
+                                body: fd
+                            })
+                            .then(r => r.json())
+                            .then(data => {
+                                if (!data.success) throw new Error(data.error || 'Save failed');
+                                closeModal();
+                                if (imgInput) { try { imgInput.value = ''; } catch(_) {} }
+                                if (statusEl) {
+                                    statusEl.style.color = '#059669';
+                                    statusEl.textContent = 'Note saved successfully!';
+                                    statusEl.style.display = 'block';
+                                }
+                                setTimeout(() => {
+                                    if (statusEl) statusEl.style.display = 'none';
+                                }, 2000);
+                            })
+                            .catch(err => {
+                                if (statusEl) {
+                                    statusEl.style.color = '#b91c1c';
+                                    statusEl.textContent = err.message || 'Failed to save personal note';
+                                    statusEl.style.display = 'block';
+                                }
+                            });
+                        }
+                        
+                        // Toggle dropdown
+                        if (noteBtn && dropdown) {
+                            noteBtn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                            });
+                        }
+                        
+                        // Handle "Add Note" button
+                        if (addNoteBtn) {
+                            addNoteBtn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                if (dropdown) dropdown.style.display = 'none';
+                                openModal();
+                            });
+                        }
+                        
+                        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+                        if (saveBtn) saveBtn.addEventListener('click', saveNote);
+                        if (imgInput) {
+                            imgInput.addEventListener('change', function() {
+                                if (imgInput.files && imgInput.files.length && previewList) {
+                                    previewList.style.display = 'grid';
+                                    Array.from(imgInput.files).forEach(file => {
+                                        const reader = new FileReader();
+                                        reader.onload = function(e) {
+                                            const img = document.createElement('img');
+                                            img.src = e.target.result;
+                                            img.style.maxWidth = '100%';
+                                            img.style.borderRadius = '8px';
+                                            img.style.border = '1px solid #e5e7eb';
+                                            img.style.cursor = 'zoom-in';
+                                            img.addEventListener('click', () => window.open(e.target.result, '_blank'));
+                                            previewList.appendChild(img);
+                                        };
+                                        reader.readAsDataURL(file);
+                                    });
+                                }
+                            });
+                        }
+                    } catch (e) { console.warn('Personal Note setup failed', e); }
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+        })();
+
+        // Sort and filter logic for patient list (preserves original items in memory)
+        (function patientSortFilter() {
+            const detailSection = document.getElementById('patientDetailSection');
+            if (!detailSection) return;
+            const noteBtn = detailSection.querySelector('#personalNoteBtn');
+            const dropdown = detailSection.querySelector('#personalNoteDropdown');
+            const addNoteBtn = detailSection.querySelector('#addNoteBtn');
+            const modal = detailSection.querySelector('#personalNoteModal');
+            const txt = detailSection.querySelector('#personalNoteText');
+            const imgInput = detailSection.querySelector('#personalNoteImage');
+            const previewList = detailSection.querySelector('#personalNotePreviewList');
+            const statusEl = detailSection.querySelector('#personalNoteStatus');
+            const cancelBtn = detailSection.querySelector('#personalNoteCancel');
+            const saveBtn = detailSection.querySelector('#personalNoteSave');
+            if (!noteBtn || !modal) return;
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+            }
+            
+            function openModal() { 
+                modal.style.display = 'flex';
+                // Clear form when opening for new note
+                if (txt) txt.value = '';
+                if (previewList) {
+                    previewList.innerHTML = '';
+                    previewList.style.display = 'none';
+                }
+                if (imgInput) imgInput.value = '';
+                if (statusEl) {
+                    statusEl.style.display = 'none';
+                    statusEl.textContent = '';
+                }
+            }
+            
+            function closeModal() { 
+                modal.style.display = 'none'; 
+                if (statusEl) { 
+                    statusEl.style.display='none'; 
+                    statusEl.textContent=''; 
+                } 
+            }
+            
+            function extractPkFromPath() {
+                const m = (window.location.pathname || '').match(/\/detail\/(\d+)\//);
+                return m ? m[1] : null;
+            }
+            
+            function saveNote() {
+                const pk = extractPkFromPath();
+                if (!pk) return;
+                const url = `/detail/${pk}/personal-note/save/`;
+                const fd = new FormData();
+                if (txt) fd.append('note', txt.value || '');
+                if (imgInput && imgInput.files && imgInput.files.length) {
+                    for (let i = 0; i < imgInput.files.length; i++) {
+                        fd.append('image', imgInput.files[i]);
+                    }
+                }
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) throw new Error(data.error || 'Save failed');
+                    closeModal();
+                    if (imgInput) { try { imgInput.value = ''; } catch(_) {} }
+                    if (statusEl) {
+                        statusEl.style.color = '#059669';
+                        statusEl.textContent = 'Note saved successfully!';
+                        statusEl.style.display = 'block';
+                    }
+                    setTimeout(() => {
+                        if (statusEl) statusEl.style.display = 'none';
+                    }, 2000);
+                })
+                .catch(err => {
+                    if (statusEl) {
+                        statusEl.style.color = '#b91c1c';
+                        statusEl.textContent = err.message || 'Failed to save personal note';
+                        statusEl.style.display = 'block';
+                    }
+                });
+            }
+            
+            // Toggle dropdown
+            if (dropdown) {
+                noteBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+            
+            // Handle "Add Note" button
+            if (addNoteBtn) {
+                addNoteBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (dropdown) dropdown.style.display = 'none';
+                    openModal();
+                });
+            }
+            
+            if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+            if (saveBtn) saveBtn.addEventListener('click', saveNote);
+            if (imgInput) {
+                imgInput.addEventListener('change', function() {
+                    if (imgInput.files && imgInput.files.length && previewList) {
+                        previewList.style.display = 'grid';
+                        Array.from(imgInput.files).forEach(file => {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                img.style.maxWidth = '100%';
+                                img.style.borderRadius = '8px';
+                                img.style.border = '1px solid #e5e7eb';
+                                img.style.cursor = 'zoom-in';
+                                img.addEventListener('click', () => window.open(e.target.result, '_blank'));
+                                previewList.appendChild(img);
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                        // do not clear; appended above; optionally refresh from server
+                        fetchNote();
+                    }
+                });
+            }
+        })();
+
+        // Sort and filter logic for patient list (preserves original items in memory)
+        (function patientSortFilter() {
+            const sortSelect = document.getElementById('sortPatients');
+            const monthInput = document.getElementById('filterMonth');
+            const clearBtn = document.getElementById('clearFilters');
+            const listSection = document.getElementById('patientListSection');
+            const searchInput = document.getElementById('patientSearch');
+            if (!listSection) return;
+
+            // Store original items in memory so they persist across filters
+            let originalItems = [];
+            
+            function parseDataDate(s) {
+                if (!s) return new Date(0);
+                // convert 'YYYY-MM-DD HH:mm' -> 'YYYY-MM-DDTHH:mm' for reliable parsing
+                try {
+                    return new Date(s.replace(' ', 'T'));
+                } catch (_) {
+                    return new Date(0);
+                }
+            }
+
+            function apply() {
+                const listEl = listSection.querySelector('.list');
+                if (!listEl) return;
+                
+                // Initialize originalItems cache on first run
+                if (originalItems.length === 0) {
+                    originalItems = Array.from(listEl.querySelectorAll('li')).map(li => li.cloneNode(true));
+                }
+                
+                const items = originalItems.map(li => li.cloneNode(true));
+                const sortBy = sortSelect ? sortSelect.value : 'date';
+                const monthVal = monthInput ? monthInput.value : '';
+                // Normalize monthVal to 'YYYY-MM' when browsers/locales return human-readable labels
+                let monthFilter = monthVal;
+                if (monthFilter && !/^\d{4}-\d{2}$/.test(monthFilter)) {
+                    // clean non-breaking spaces and trim
+                    monthFilter = monthFilter.replace(/\u00A0/g, ' ').trim();
+                    // Try common textual formats like 'December 2025' or 'Dec 2025'
+                    const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+                    const parts = monthFilter.split(/\s+/);
+                    if (parts.length >= 2) {
+                        const yearPart = parts[parts.length - 1];
+                        const monthPart = parts.slice(0, parts.length - 1).join(' ').toLowerCase();
+                        const yearMatch = yearPart.match(/^\d{4}$/);
+                        if (yearMatch) {
+                            // find month index by name or abbreviation
+                            let monthIndex = -1;
+                            // exact/full name
+                            monthIndex = monthNames.indexOf(monthPart);
+                            if (monthIndex === -1) {
+                                // try first 3 letters (abbr)
+                                const abbr = monthPart.slice(0,3);
+                                monthIndex = monthNames.findIndex(m => m.slice(0,3) === abbr);
+                            }
+                            if (monthIndex !== -1) {
+                                const y = yearPart;
+                                const m = String(monthIndex + 1).padStart(2, '0');
+                                monthFilter = `${y}-${m}`;
+                            } else {
+                                // last resort: try Date parse
+                                const parsed = new Date(monthFilter);
+                                if (!isNaN(parsed)) {
+                                    const y = parsed.getFullYear();
+                                    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+                                    monthFilter = `${y}-${m}`;
+                                }
+                            }
+                        }
+                    } else {
+                        // Try formats like '12/2025' or '12-2025'
+                        const numeric = monthFilter.match(/^(\d{1,2})[\/\-](\d{4})$/);
+                        if (numeric) {
+                            const mnum = String(Number(numeric[1])).padStart(2, '0');
+                            monthFilter = `${numeric[2]}-${mnum}`;
+                        }
+                    }
+                }
+                const searchVal = searchInput ? (searchInput.value || '').trim().toLowerCase() : '';
+
+                let filtered = items.filter(li => {
+                    // month filter
+                    if (monthFilter) {
+                        let liDate = li.getAttribute('data-date') || '';
+                        // Fallback: if data-date is missing, extract YYYY-MM from visible text inside li
+                        if (!liDate) {
+                            const liText = li.textContent || '';
+                            // Look for date patterns like 2025-12-08, Dec 08 2025, December 08 2025, etc.
+                            const dateMatch = liText.match(/(\d{4})-(\d{2})-?(\d{2})?/) || 
+                                             liText.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d+,? (\d{4})/) ||
+                                             liText.match(/(January|February|March|April|May|June|July|August|September|October|November|December) \d+,? (\d{4})/i);
+                            if (dateMatch) {
+                                if (dateMatch[1].match(/^\d{4}$/)) {
+                                    // ISO format: 2025-12-08
+                                    liDate = dateMatch[1] + '-' + dateMatch[2];
+                                } else {
+                                    // Textual format: extract year and convert month name to number
+                                    const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+                                    const yearIdx = dateMatch.length - 1;
+                                    const year = dateMatch[yearIdx];
+                                    const rawMonth = dateMatch[1].toLowerCase();
+                                    let monthIdx = monthNames.indexOf(rawMonth);
+                                    if (monthIdx === -1) monthIdx = monthNames.findIndex(m => m.slice(0,3) === rawMonth.slice(0,3));
+                                    if (monthIdx !== -1) liDate = year + '-' + String(monthIdx + 1).padStart(2, '0');
+                                }
+                            }
+                        }
+                        if (!liDate.startsWith(monthFilter)) return false;
+                    }
+                    // search filter (by name, case text/number, or phone)
+                    if (searchVal) {
+                        const name = (li.getAttribute('data-name') || '').toLowerCase();
+                        const caseText = (li.getAttribute('data-case') || '').toLowerCase();
+                        const caseNum = (li.getAttribute('data-case-no') || '').toString().toLowerCase();
+                        const phone = (li.getAttribute('data-phone') || '').toLowerCase();
+                        
+                        // Match: name, case text, exact case_no (for digits), or phone substring (3+ chars)
+                        let isMatch = name.includes(searchVal) || caseText.includes(searchVal);
+                        
+                        // For numeric search: match exact case_no only
+                        if (!isMatch && /^\d+$/.test(searchVal)) {
+                            isMatch = (caseNum === searchVal);
+                        }
+                        
+                        // For 3+ char phone substring
+                        if (!isMatch && searchVal.length >= 3) {
+                            isMatch = phone.includes(searchVal);
+                        }
+                        
+                        if (!isMatch) return false;
+                    }
+                    return true;
+                });
+
+                // Sorting
+                filtered.sort((a, b) => {
+                    if (sortBy === 'name') {
+                        return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+                    }
+                    if (sortBy === 'date') {
+                        const da = parseDataDate(a.getAttribute('data-date'));
+                        const db = parseDataDate(b.getAttribute('data-date'));
+                        return db - da; // newest first
+                    }
+                    // case_no default numeric sort (ascending)
+                    return Number(a.getAttribute('data-case-no') || 0) - Number(b.getAttribute('data-case-no') || 0);
+                });
+
+                // Re-append in new order to the live list element
+                listEl.innerHTML = '';
+                if (filtered.length === 0) {
+                    const empty = document.createElement('li');
+                    empty.textContent = 'No patients found.';
+                    listEl.appendChild(empty);
+                } else {
+                    filtered.forEach(li => listEl.appendChild(li));
+                }
+                // update debug box with month info (show raw value, normalized value, sample data-date and match count)
+                try {
+                    const rawItems = Array.from(listEl.querySelectorAll('li'));
+                    const rawItemsCount = rawItems.length;
+                    const sampleLi = listEl.querySelector('li[data-date]');
+                    const sampleDate = sampleLi ? sampleLi.getAttribute('data-date') : null;
+                    const dbg = document.getElementById('monthDebug');
+                    const searchValDisplay = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
+                    if (dbg) dbg.textContent = `raw: ${monthVal || '-'}  ·  normalized: ${monthFilter || '-'}  ·  items: ${rawItemsCount}  ·  sample: ${sampleDate || '-'}  ·  search: ${searchValDisplay || '-'}  ·  matches: ${filtered.length}`;
+                    console.debug('monthFilter debug:', { raw: monthVal, normalized: monthFilter, rawItemsCount, sampleDate, search: searchValDisplay, matches: filtered.length });
+                } catch (err) { console.warn('month debug update failed', err); }
+            }
+
+            if (sortSelect) sortSelect.addEventListener('change', apply);
+            if (monthInput) monthInput.addEventListener('change', apply);
+            if (clearBtn) clearBtn.addEventListener('click', function() { 
+                if (monthInput) { monthInput.value = ''; } 
+                if (searchInput) { searchInput.value = ''; } 
+                apply(); 
+            });
+            if (searchInput) searchInput.addEventListener('input', apply);
+
+            // Expose for other scripts to re-run filters/sorting after DOM refresh
+            window.applyPatientFilters = function() {
+                // Reset cache to force reinit
+                originalItems = [];
+                apply();
+            };
+
+            // Run once on load to ensure initial ordering is applied
+            apply();
+
+            // Re-show toolbar when returning to list view from details
+            const detailSection = document.getElementById('patientDetailSection');
+            const observer = new MutationObserver(() => {
+                if (detailSection.style.display === 'none') {
+                    const toolbar = document.getElementById('patientToolbar');
+                    if (toolbar) toolbar.style.display = '';
+                }
+            });
+            observer.observe(detailSection, { attributes: true, attributeFilter: ['style'] });
+
+            // Smoother Back to Home inside inline details
+            detailSection.addEventListener('click', function(e) {
+                const anchor = e.target.closest('a.btn');
+                if (!anchor) return;
+                const text = anchor.textContent ? anchor.textContent.trim().toLowerCase() : '';
+                if (!text) return;
+                if (text.includes('back to home')) {
+                    e.preventDefault();
+                    window.location.href = anchor.getAttribute('href');
+                    return;
+                }
+            });
+        })();
+
+        // Follow-up search functionality
+        (function() {
+            const searchInput = document.getElementById('followupSearch');
+            if (!searchInput) return;
+
+            searchInput.addEventListener('input', function(e) {
+                const searchQuery = e.target.value.toLowerCase();
+                const followupsList = document.getElementById('followups-list');
+                if (!followupsList) return;
+
+                const items = followupsList.querySelectorAll('li[data-patient-name]');
+                let visibleCount = 0;
+
+                items.forEach(li => {
+                    const patientName = li.getAttribute('data-patient-name');
+                    if (patientName.includes(searchQuery)) {
+                        li.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        li.style.display = 'none';
+                    }
+                });
+
+                // Show/hide empty message
+                const emptyMsg = followupsList.querySelector('#empty-followups-msg');
+                if (emptyMsg) {
+                    emptyMsg.style.display = visibleCount === 0 && searchQuery ? 'list-item' : 'none';
+                }
+            });
+        })();
+
+        // Follow-up modal and form submission handler
+        (function() {
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            const modal = document.getElementById('followup-modal');
+            const form = document.getElementById('followup-form');
+            const dtInput = document.getElementById('fu-datetime');
+            const hiddenPatient = document.getElementById('fu-patient-id');
+            const errorDiv = document.getElementById('fu-error');
+
+            // Function to open modal
+            function openFollowupModal(patientId) {
+                if (!patientId) {
+                    console.warn('openFollowupModal called without patientId');
+                    return;
+                }
+                // Ensure modal and form elements exist
+                if (!modal || !form || !hiddenPatient || !dtInput) {
+                    console.error('Modal elements not found');
+                    return;
+                }
+                // Reset form state completely
+                form.reset();
+                hiddenPatient.value = patientId;
+                errorDiv.style.display = 'none';
+                errorDiv.innerText = '';
+                // set min to now in local datetime-local format YYYY-MM-DDTHH:MM
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // adjust for timezone
+                const iso = now.toISOString().slice(0,16);
+                dtInput.min = iso;
+                dtInput.value = iso; // prefill to now
+                // Show modal
+                modal.style.display = 'flex';
+                // Small delay to ensure display change is applied before focus
+                setTimeout(() => {
+                    dtInput.focus();
+                }, 10);
+            }
+
+            // Use event delegation on patient list container for robust handler attachment
+            // This way handlers persist even when DOM is updated
+            function setupFollowupDelegation() {
+                const patientListSection = document.getElementById('patientListSection');
+                if (patientListSection && !patientListSection._followupDelegateAttached) {
+                    patientListSection.addEventListener('click', function(e) {
+                        // Check if clicked element is a follow-up button or inside one
+                        const followBtn = e.target.closest('.follow-btn');
+                        if (followBtn) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const pid = followBtn.getAttribute('data-patient-id');
+                            if (!pid) {
+                                console.warn('Follow-up button missing data-patient-id attribute');
+                                return;
+                            }
+                            // Ensure modal element still exists in DOM
+                            if (!modal || !document.body.contains(modal)) {
+                                console.error('Modal element not found in DOM');
+                                return;
+                            }
+                            openFollowupModal(pid);
+                        }
+                    });
+                    patientListSection._followupDelegateAttached = true;
+                }
+            }
+            // Expose setupFollowupDelegation globally so it can be called after DOM updates
+            try { window.setupFollowupDelegation = setupFollowupDelegation; } catch(e) {}
+            // Set up delegation immediately
+            setupFollowupDelegation();
+            // Also set up after a short delay in case DOM isn't ready yet
+            setTimeout(setupFollowupDelegation, 100);
+
+            // Attach click handlers to all follow-up buttons (for backwards compatibility)
+            attachFollowupHandlers = function() {
+                const buttons = document.querySelectorAll('.follow-btn');
+                buttons.forEach(btn => {
+                    // Remove old listener if any to avoid duplicates
+                    const handler = btn._followupHandler;
+                    if (handler) {
+                        btn.removeEventListener('click', handler);
+                    }
+                    // Define and store handler
+                    const followupHandler = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Always allow opening modal to schedule another follow-up
+                        const pid = this.getAttribute('data-patient-id');
+                        if (!pid) {
+                            console.warn('Follow-up button missing data-patient-id attribute');
+                            return;
+                        }
+                        // Ensure modal element still exists in DOM
+                        if (!modal || !document.body.contains(modal)) {
+                            console.error('Modal element not found in DOM');
+                            return;
+                        }
+                        openFollowupModal(pid);
+                    };
+                    btn._followupHandler = followupHandler;
+                    btn.addEventListener('click', followupHandler);
+                });
+            };
+
+            // Expose for other code and attach on initial load
+            try { window.attachFollowupHandlers = attachFollowupHandlers; } catch(e) {}
+            attachFollowupHandlers();
+
+            // Cancel button handler
+            const cancelBtn = document.getElementById('fu-cancel');
+            if (cancelBtn) {
+                cancelBtn.onclick = function(e) {
+                    e.preventDefault();
+                    modal.style.display = 'none';
+                };
+            }
+
+            // Form submission handler
+            if (form) {
+                form.onsubmit = function(ev) {
+                    ev.preventDefault();
+                    errorDiv.style.display = 'none';
+                    const patient_id = hiddenPatient.value;
+                    const scheduled_date = dtInput.value; // format: YYYY-MM-DDTHH:MM
+
+                    if (!patient_id || !scheduled_date) {
+                        errorDiv.innerText = 'Please choose date and time.';
+                        errorDiv.style.display = 'block';
+                        return false;
+                    }
+
+                    // Basic client-side check
+                    const chosen = new Date(scheduled_date);
+                    const now = new Date();
+                    if (chosen < now) {
+                        errorDiv.innerText = 'Please choose a future date/time.';
+                        errorDiv.style.display = 'block';
+                        return false;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('patient_id', patient_id);
+                    formData.append('scheduled_date', scheduled_date);
+
+                    const csrftoken = getCookie('csrftoken');
+                    fetch("{% url 'Anand_Clinic:followup_create_ajax' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                        },
+                        body: formData,
+                        credentials: 'same-origin'
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.success) {
+                            errorDiv.innerText = data.error || 'Failed to schedule follow-up';
+                            errorDiv.style.display = 'block';
+                            return;
+                        }
+
+                        // Close modal and reset form immediately so user can add another follow-up right away
+                        modal.style.display = 'none';
+                        errorDiv.style.display = 'none';
+                        errorDiv.innerText = '';
+                        form.reset();
+                        hiddenPatient.value = '';
+                        dtInput.value = '';
+
+                        // Update the corresponding patient row button to indicate scheduled state and disable it
+                        try {
+                            const btn = document.querySelector(`.follow-btn[data-patient-id="${patient_id}"]`);
+                            if (btn) {
+                                // Get current count or set to 1
+                                const currentText = btn.textContent.trim();
+                                let count = 1;
+                                const match = currentText.match(/\((\d+)\)/);
+                                if (match) {
+                                    count = parseInt(match[1]) + 1;
+                                }
+                                btn.textContent = `Follow up (${count})`;
+                                btn.classList.add('scheduled');
+                                btn.disabled = true; // Disable when there's a scheduled follow-up
+                                // Reattach handler immediately to ensure it works right away
+                                if (window.attachFollowupHandlers) {
+                                    window.attachFollowupHandlers();
+                                }
+                            }
+                        } catch (_) { /* noop */ }
+
+                        // Reattach all handlers immediately (don't wait for async refresh)
+                        // This ensures buttons work right away even before patient list refreshes
+                        if (window.attachFollowupHandlers) {
+                            window.attachFollowupHandlers();
+                        }
+
+                        // Refresh follow-ups list and patient list (async, don't block)
+                        if (window.__followups && window.__followups.loadFollowups) {
+                            window.__followups.loadFollowups().then(() => {
+                                // Also refresh patient list to update button state
+                                return fetch(window.location.pathname + (window.location.search ? '&' : '?') + '_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store' });
+                            }).then(refreshed => refreshed.text()).then(html => {
+                                const parser = new DOMParser();
+                                const doc = parser.parseFromString(html, 'text/html');
+                                const newListSection = doc.querySelector('#patientListSection');
+                                const currentListSection = document.querySelector('#patientListSection');
+                                if (newListSection && currentListSection) {
+                                    currentListSection.innerHTML = newListSection.innerHTML;
+                                    // Ensure delegation handler is set up (in case container was replaced)
+                                    if (window.setupFollowupDelegation) {
+                                        window.setupFollowupDelegation();
+                                    }
+                                    // Reattach follow-up button handlers after list refresh
+                                    if (window.attachFollowupHandlers) {
+                                        window.attachFollowupHandlers();
+                                    }
+                                    if (window.applyPatientFilters) window.applyPatientFilters();
+                                }
+                            }).catch(err => {
+                                console.warn('Failed to refresh patient list:', err);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Follow-up error:', err);
+                        errorDiv.innerText = 'Network error';
+                        errorDiv.style.display = 'block';
+                    });
+                    
+                    return false;
+                };
+            }
+        })();
+    </script>
+
+    <script>
+    // Global print helper available on all pages so inline-injected detail can call it
+    function printPatientDetail() {
+        try {
+            const section = document.getElementById('patientDetailSection') || document.querySelector('.print-area') || document.querySelector('.card.chart');
+            if (!section) {
+                alert('Nothing to print.');
+                return;
+            }
+
+            // Clone and clean the section to remove duplicated headers/sidebars
+            const temp = document.createElement('div');
+            temp.innerHTML = section.innerHTML;
+            temp.querySelectorAll('.chart-header, .logo-section, .clinic-name, .facility').forEach(n => n.remove());
+            temp.querySelectorAll('.no-print, .followups, .checkins, .sidebar, .nav, .actions').forEach(n => n.remove());
+            const content = temp.innerHTML;
+
+            const logoEl = document.querySelector('.logo');
+            const logo = logoEl ? logoEl.src : '';
+            const headerHtml = `
+                <div style="position:relative; padding:8px 0 6px 0;">
+                    ${logo ? `<img src="${logo}" style="height:60px; position:absolute; left:16px; top:0;"/>` : ''}
+                    <div style="text-align:center;">
+                        <div style="font-size:12px; color:#333; margin-bottom:6px;">${new Date().toLocaleString()}</div>
+                        <h1 style="margin:0; font-size:28px; font-weight:800;">OM GAYATRI HOMEOPATHIC CLINIC</h1>
+                    </div>
+                </div>
+                <hr style="border:none; border-top:1px solid #e5e7eb; margin:12px 0 18px 0;" />
+            `;
+
+            // Create a temporary wrapper for printing so we don't modify the existing page DOM
+            const existing = document.getElementById('__print_wrapper');
+            if (existing) existing.remove();
+
+            const wrapper = document.createElement('div');
+            wrapper.id = '__print_wrapper';
+            wrapper.style.background = '#fff';
+            wrapper.style.padding = '12px';
+            wrapper.innerHTML = '<div class="print-header">' + headerHtml + '</div>' + '<div class="print-body">' + content + '</div>';
+            document.body.appendChild(wrapper);
+
+            // Add a temporary print-specific stylesheet that hides everything except our wrapper during printing
+            const styleEl = document.createElement('style');
+            styleEl.id = '__print_style';
+            styleEl.innerHTML = `
+                @media print {
+                    body * { visibility: hidden !important; }
+                    #__print_wrapper, #__print_wrapper * { visibility: visible !important; }
+                    #__print_wrapper { position: absolute; left: 0; top: 0; width: 100%; padding: 16px; }
+                }
+                @page { size: A4; margin: 16mm; }
+            `;
+            document.head.appendChild(styleEl);
+
+            // Scroll to top then trigger print dialog; cleanup after
+            window.scrollTo(0,0);
+            try { window.print(); } catch (e) { console.warn('Print request failed', e); }
+
+            // Remove the temporary nodes after printing; use timeout to allow print dialog to initialize
+            setTimeout(function() {
+                const w = document.getElementById('__print_wrapper'); if (w) w.remove();
+                const s = document.getElementById('__print_style'); if (s) s.remove();
+            }, 700);
+        } catch (err) {
+            console.error('Print error', err);
+            alert('Unable to print. See console for details.');
+        }
+    }
+    </script>
+
+    <script>
+        // Set global URLs for follow-ups manager to use
+        window.FOLLOWUP_CHECKIN_URL = "{% url 'Anand_Clinic:followup_checkin_ajax' %}";
+    </script>
+
+    <script src="{% static 'js/followups.js' %}?v=2"></script>
+
+    {% block scripts %}{% endblock scripts %}
+
+</body>
+</html>
